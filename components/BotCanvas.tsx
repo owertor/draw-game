@@ -137,16 +137,20 @@ export default function BotCanvas({
   }, [drawing, playing, onComplete, initCanvas, drawDurationMs]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={CANVAS_SIZE}
-      height={CANVAS_SIZE}
-      className="rounded-xl"
+    <div
+      className="w-full rounded-2xl overflow-hidden"
       style={{
-        border: "2px solid #2a2a2a",
-        maxWidth: "100%",
-        aspectRatio: "1",
+        border: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "0 0 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
       }}
-    />
+    >
+      <canvas
+        ref={canvasRef}
+        width={CANVAS_SIZE}
+        height={CANVAS_SIZE}
+        className="block"
+        style={{ maxWidth: "100%", width: "100%", aspectRatio: "1", display: "block" }}
+      />
+    </div>
   );
 }

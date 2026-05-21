@@ -175,34 +175,44 @@ export default function DrawingCanvas({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <canvas
-        ref={canvasRef}
-        id={canvasId}
-        width={400}
-        height={400}
-        className="rounded-xl touch-none"
+      <div
+        className="w-full rounded-2xl overflow-hidden"
         style={{
-          border: "2px solid #2a2a2a",
-          cursor: disabled ? "not-allowed" : "crosshair",
-          maxWidth: "100%",
-          aspectRatio: "1",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 0 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
         }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={stopDrawing}
-      />
+      >
+        <canvas
+          ref={canvasRef}
+          id={canvasId}
+          width={400}
+          height={400}
+          className="touch-none block"
+          style={{
+            cursor: disabled ? "not-allowed" : "crosshair",
+            maxWidth: "100%",
+            width: "100%",
+            aspectRatio: "1",
+            display: "block",
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={stopDrawing}
+        />
+      </div>
       <button
         onClick={handleClear}
         disabled={disabled || isEmpty}
-        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200
+                   disabled:opacity-25 disabled:cursor-not-allowed hover:opacity-80"
         style={{
-          background: "var(--card, #1a1a1a)",
-          border: "1px solid var(--border, #2a2a2a)",
-          color: "#ededed",
+          background: "rgba(255,255,255,0.05)",
+          border:     "1px solid rgba(255,255,255,0.1)",
+          color:      "var(--text2)",
         }}
       >
         Очистить

@@ -9,8 +9,8 @@ interface ModelLoaderProps {
 
 export default function ModelLoader({ onReady }: ModelLoaderProps) {
   const [progress, setProgress] = useState(0);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [done, setDone]         = useState(false);
+  const [error, setError]       = useState<string | null>(null);
 
   useEffect(() => {
     if (isModelReady()) {
@@ -26,28 +26,55 @@ export default function ModelLoader({ onReady }: ModelLoaderProps) {
       })
       .catch((e) => {
         console.error(e);
-        setError("Не удалось загрузить модель. Обновите страницу.");
+        setError("Не удалось подключиться. Обновите страницу.");
       });
   }, [onReady]);
 
   if (done) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-950 gap-6 p-8">
-      <h2 className="text-xl font-bold text-white">Загрузка модели…</h2>
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 p-8"
+      style={{
+        background: "var(--bg)",
+        backgroundImage:
+          "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(99,102,241,0.12) 0%, transparent 70%)",
+      }}
+    >
+      <div className="text-6xl float select-none">🎨</div>
+
+      <div className="text-center">
+        <h2 className="text-3xl font-black text-gradient mb-2">Draw &amp; Guess</h2>
+        <p style={{ color: "var(--text2)" }}>Подключаемся к AI…</p>
+      </div>
 
       {error ? (
-        <p className="text-red-400 text-sm text-center">{error}</p>
+        <p
+          className="text-sm text-center px-5 py-3 rounded-xl"
+          style={{
+            color:      "var(--red)",
+            background: "rgba(239,68,68,0.1)",
+            border:     "1px solid rgba(239,68,68,0.25)",
+          }}
+        >
+          {error}
+        </p>
       ) : (
-        <div className="w-full max-w-xs flex flex-col gap-2">
-          <div className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden">
+        <div className="w-full max-w-[260px] flex flex-col gap-3">
+          <div
+            className="w-full rounded-full overflow-hidden"
+            style={{ height: "4px", background: "rgba(255,255,255,0.07)" }}
+          >
             <div
-              className="h-full bg-indigo-500 rounded-full transition-all duration-200"
-              style={{ width: `${Math.round(progress * 100)}%` }}
+              className="h-full rounded-full transition-all duration-300 pulse-glow"
+              style={{
+                width:      `${Math.round(progress * 100)}%`,
+                background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
+              }}
             />
           </div>
-          <p className="text-zinc-500 text-sm text-center">
-            {Math.round(progress * 100)}% — подключаюсь к Claude AI
+          <p className="text-xs text-center" style={{ color: "var(--text3)" }}>
+            {Math.round(progress * 100)}%
           </p>
         </div>
       )}

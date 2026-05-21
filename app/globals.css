@@ -1,50 +1,132 @@
 @import "tailwindcss";
 
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --background: #0f0f0f;
-  --foreground: #ededed;
-  --card: #1a1a1a;
-  --border: #2a2a2a;
-  --accent: #6366f1;
+  --bg:            #07070f;
+  --bg2:           #0d0d1b;
+  --card:          rgba(255, 255, 255, 0.04);
+  --card-hover:    rgba(255, 255, 255, 0.06);
+  --border:        rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(99, 102, 241, 0.45);
+
+  --accent:        #6366f1;
+  --accent-bright: #818cf8;
+  --accent-dim:    rgba(99, 102, 241, 0.12);
+  --violet:        #8b5cf6;
+
+  --text:          #f0f0f8;
+  --text2:         rgba(240, 240, 248, 0.5);
+  --text3:         rgba(240, 240, 248, 0.25);
+
+  --green:         #22c55e;
+  --red:           #f87171;
+  --yellow:        #fbbf24;
 }
 
+/* ── Base ───────────────────────────────────────────────────────────────────── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 0%,   rgba(99, 102, 241, 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 100%,  rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+  color: var(--text);
+  font-family: var(--font-inter, system-ui, -apple-system, sans-serif);
   min-height: 100vh;
-  /* Mobile: prevent overscroll bounce */
   overscroll-behavior: none;
-  /* iOS safe areas */
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  padding-left:   env(safe-area-inset-left);
+  padding-right:  env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Slide-in animation for phase panels */
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.phase-enter {
-  animation: slideIn 0.3s ease-out both;
+/* ── Utility classes ────────────────────────────────────────────────────────── */
+
+/* Glass card */
+.glass {
+  background:    var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
 }
 
-/* Pop animation for correct answer */
+/* Accent tinted glass */
+.glass-accent {
+  background: var(--accent-dim);
+  border: 1px solid var(--border-accent);
+  border-radius: 18px;
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Primary button */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.30),
+              inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 32px rgba(99, 102, 241, 0.50),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Divider */
+.divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────────── */
+
+/* Slide up (phase transitions) */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.phase-enter {
+  animation: slideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Float */
+@keyframes float {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-9px); }
+}
+.float {
+  animation: float 3.2s ease-in-out infinite;
+}
+
+/* Pop (correct answer) */
 @keyframes pop {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.12); }
-  100% { transform: scale(1); }
+  0%   { transform: scale(1);    }
+  40%  { transform: scale(1.13); }
+  100% { transform: scale(1);    }
 }
 .pop {
   animation: pop 0.35s ease-out;
 }
 
-/* Shake animation for wrong answer flash */
+/* Shake (wrong answer) */
 @keyframes shake {
-  0%,100% { transform: translateX(0); }
-  25%      { transform: translateX(-6px); }
-  75%      { transform: translateX(6px); }
+  0%,100% { transform: translateX(0);   }
+  25%      { transform: translateX(-7px); }
+  75%      { transform: translateX( 7px); }
 }
 .shake {
   animation: shake 0.3s ease;
@@ -57,4 +139,22 @@ body {
 }
 .fade-in {
   animation: fadeIn 0.4s ease-out both;
+}
+
+/* Scale in */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+.scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Pulse glow (loading bar) */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0  8px rgba(99,102,241,0.35); }
+  50%       { box-shadow: 0 0 22px rgba(99,102,241,0.65), 0 0 40px rgba(99,102,241,0.20); }
+}
+.pulse-glow {
+  animation: pulseGlow 1.8s ease-in-out infinite;
 }

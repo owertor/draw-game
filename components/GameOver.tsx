@@ -15,61 +15,113 @@ interface GameOverProps {
 }
 
 export default function GameOver({ phase1, phase2, roundTotal, sessionTotal, onNext }: GameOverProps) {
+  const emoji  = roundTotal === 0 ? "😔" : roundTotal >= 200 ? "🔥" : roundTotal >= 100 ? "✅" : "👍";
+  const stars  = roundTotal >= 250 ? "⭐⭐⭐" : roundTotal >= 120 ? "⭐⭐" : roundTotal > 0 ? "⭐" : "";
+
   return (
     <div className="w-full flex flex-col items-center gap-5">
-      <h2 className="text-2xl font-bold text-white">Раунд завершён!</h2>
 
-      <div className="w-full flex flex-col gap-3">
-        {/* Phase 1 result */}
-        <div className={`rounded-xl p-4 border ${phase1.success ? "border-green-600 bg-green-950" : "border-zinc-700 bg-zinc-900"}`}>
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-xs text-zinc-400 mb-0.5">Ты рисовал — бот угадывал</p>
-              <p className="text-white font-semibold">{phase1.word}</p>
-            </div>
-            <div className="text-right">
-              <p className={`text-2xl font-bold ${phase1.success ? "text-green-400" : "text-zinc-600"}`}>
-                +{phase1.points}
-              </p>
-              <p className="text-xs text-zinc-500">{phase1.success ? "Угадал!" : "Не угадал"}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Phase 2 result */}
-        <div className={`rounded-xl p-4 border ${phase2.success ? "border-green-600 bg-green-950" : "border-zinc-700 bg-zinc-900"}`}>
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-xs text-zinc-400 mb-0.5">Бот рисовал — ты угадывал</p>
-              <p className="text-white font-semibold">{phase2.word}</p>
-            </div>
-            <div className="text-right">
-              <p className={`text-2xl font-bold ${phase2.success ? "text-green-400" : "text-zinc-600"}`}>
-                +{phase2.points}
-              </p>
-              <p className="text-xs text-zinc-500">{phase2.success ? "Угадал!" : "Не угадал"}</p>
-            </div>
-          </div>
-        </div>
+      {/* Title */}
+      <div className="text-center">
+        <div className="text-4xl mb-1 scale-in">{emoji}</div>
+        <h2 className="text-2xl font-black text-white">Раунд завершён!</h2>
+        {stars && <p className="text-xl mt-1">{stars}</p>}
       </div>
 
-      <div className="w-full rounded-xl p-4 bg-zinc-900 border border-zinc-700 flex justify-between items-center">
+      {/* Phase results */}
+      <div className="w-full flex flex-col gap-3">
+        <PhaseCard
+          icon="✏️"
+          label="Ты рисовал"
+          word={phase1.word}
+          points={phase1.points}
+          success={phase1.success}
+          successText="Бот угадал!"
+        />
+        <PhaseCard
+          icon="🤖"
+          label="Бот рисовал"
+          word={phase2.word}
+          points={phase2.points}
+          success={phase2.success}
+          successText="Ты угадал!"
+        />
+      </div>
+
+      {/* Total */}
+      <div
+        className="w-full rounded-2xl p-5 flex justify-between items-center"
+        style={{ background: "var(--accent-dim)", border: "1px solid var(--border-accent)" }}
+      >
         <div>
-          <p className="text-zinc-400 text-sm">Очков за раунд</p>
-          <p className="text-3xl font-bold text-indigo-400">+{roundTotal}</p>
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--text2)" }}>
+            За раунд
+          </p>
+          <p className="text-4xl font-black" style={{ color: "var(--accent-bright)" }}>
+            +{roundTotal}
+          </p>
         </div>
         <div className="text-right">
-          <p className="text-zinc-400 text-sm">Всего</p>
-          <p className="text-3xl font-bold text-white">{sessionTotal}</p>
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--text2)" }}>
+            Всего
+          </p>
+          <p className="text-4xl font-black text-white">{sessionTotal}</p>
         </div>
       </div>
 
       <button
         onClick={onNext}
-        className="w-full py-4 rounded-xl font-bold text-lg text-white bg-indigo-500 hover:bg-indigo-600 transition-colors"
+        className="btn-primary w-full py-4 rounded-2xl font-bold text-lg text-white"
       >
         Следующий раунд →
       </button>
+    </div>
+  );
+}
+
+function PhaseCard({
+  icon, label, word, points, success, successText,
+}: {
+  icon: string;
+  label: string;
+  word: string;
+  points: number;
+  success: boolean;
+  successText: string;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-4"
+      style={success ? {
+        background: "rgba(34,197,94,0.08)",
+        border: "1px solid rgba(34,197,94,0.28)",
+      } : {
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
+      <div className="flex justify-between items-center">
+        <div>
+          <p
+            className="text-[10px] uppercase tracking-widest font-semibold mb-1"
+            style={{ color: "var(--text3)" }}
+          >
+            {icon} {label}
+          </p>
+          <p className="text-white font-bold text-lg leading-tight">{word}</p>
+        </div>
+        <div className="text-right ml-3">
+          <p
+            className="text-2xl font-black tabular-nums"
+            style={{ color: success ? "var(--green)" : "var(--text3)" }}
+          >
+            +{points}
+          </p>
+          <p className="text-xs" style={{ color: success ? "#4ade80" : "var(--text3)" }}>
+            {success ? successText : "Не угадал"}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

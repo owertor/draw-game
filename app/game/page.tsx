@@ -16,6 +16,16 @@ import { getRandomDrawing, type QuickDrawDrawing } from "@/lib/drawings-loader";
 import { getBestScore, saveGameResult } from "@/lib/storage";
 import { Sounds } from "@/lib/sounds";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+/** Russian plural form: 1 буква / 2 буквы / 5 букв */
+function ruLetters(n: number): string {
+  const mod10  = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11)                          return `${n} буква`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} буквы`;
+  return `${n} букв`;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const PHASE1_TIME = 30; // seconds: player draws, bot guesses
 const PHASE2_TIME = 30; // seconds: bot draws, player guesses (timer starts immediately)
@@ -272,18 +282,24 @@ export default function GamePage() {
     <>
       <ModelLoader onReady={handleModelReady} />
 
-      <main className="flex flex-col items-center min-h-screen p-4 gap-4 pb-8">
-        <header className="w-full max-w-lg flex items-center justify-between pt-4">
-          <Link href="/" className="text-zinc-500 hover:text-zinc-300 transition-colors text-sm">
+      <main className="flex flex-col items-center min-h-screen p-4 gap-4 pb-10">
+
+        {/* Header */}
+        <header className="w-full max-w-lg flex items-center justify-between pt-3">
+          <Link
+            href="/"
+            className="text-sm font-semibold transition-opacity hover:opacity-60"
+            style={{ color: "var(--text2)" }}
+          >
             ← Меню
           </Link>
-          <h1 className="text-xl font-bold text-indigo-400">Draw & Guess</h1>
+          <h1 className="text-lg font-black text-gradient">Draw &amp; Guess</h1>
           <div className="w-16" />
         </header>
 
         <div className="w-full max-w-lg flex flex-col gap-4">
 
-          {/* ScoreBoard — always visible in active rounds */}
+          {/* ScoreBoard */}
           {phase !== "idle" && (
             <ScoreBoard
               roundScore={roundScore}
@@ -293,34 +309,57 @@ export default function GamePage() {
             />
           )}
 
-          {/* ── IDLE ─────────────────────────────── */}
+          {/* ── IDLE ───────────────────────────────────────────────────────── */}
           {phase === "idle" && (
-            <div className="phase-enter bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center gap-6">
+            <div className="phase-enter glass p-8 flex flex-col items-center gap-6">
+              <div className="text-5xl float select-none">🎨</div>
               <div className="text-center">
-                <p className="text-zinc-400 mb-2">Нажми, чтобы начать</p>
-                <p className="text-zinc-500 text-sm">Бот распознаёт рисунки с помощью Claude AI</p>
+                {bestScore > 0 && (
+                  <p className="text-sm font-semibold mb-2" style={{ color: "var(--yellow)" }}>
+                    🏆 Рекорд: {bestScore}
+                  </p>
+                )}
+                <p className="font-medium" style={{ color: "var(--text2)" }}>
+                  Готов сыграть?
+                </p>
               </div>
               <button
                 onClick={startPhase1}
                 disabled={!modelReady}
-                className="w-full py-4 px-6 rounded-xl font-bold text-lg text-white bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="btn-primary w-full py-4 px-6 rounded-2xl font-bold text-lg text-white"
               >
-                {modelReady ? "Начать!" : "Загрузка модели…"}
+                {modelReady ? "Начать игру!" : "Загрузка…"}
               </button>
             </div>
           )}
 
-          {/* ── PHASE 1: Player draws ─────────────── */}
+          {/* ── PHASE 1: Player draws ──────────────────────────────────────── */}
           {phase === "player_drawing" && p1Word && (
-            <div className="phase-enter bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-4">
+            <div className="phase-enter glass p-5 flex flex-col gap-4">
+
+              {/* Phase header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-zinc-500 text-xs">Нарисуй:</p>
-                  <p className="text-3xl font-bold text-white">{p1Word.ru}</p>
+                  <p className="text-[10px] uppercase tracking-widest font-semibold mb-1"
+                     style={{ color: "var(--text3)" }}>
+                    Нарисуй это
+                  </p>
+                  <p
+                    className="text-4xl font-black leading-tight"
+                    style={{ color: p1Success ? "var(--green)" : "var(--text)" }}
+                  >
+                    {p1Word.ru}
+                  </p>
                 </div>
-                <div className="text-right text-xs text-zinc-500">
-                  <p>Фаза 1</p>
-                  <p>Бот угадывает</p>
+                <div
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider"
+                  style={{
+                    background: "var(--accent-dim)",
+                    border:     "1px solid var(--border-accent)",
+                    color:      "var(--accent-bright)",
+                  }}
+                >
+                  Фаза 1
                 </div>
               </div>
 
@@ -336,30 +375,49 @@ export default function GamePage() {
               {/* Bot predictions */}
               {p1Predictions.length > 0 && !p1Success && (
                 <div className="flex flex-col gap-2">
-                  <p className="text-zinc-500 text-xs">Бот думает:</p>
+                  <p className="text-[10px] uppercase tracking-widest font-semibold"
+                     style={{ color: "var(--text3)" }}>
+                    🤖 Бот думает:
+                  </p>
                   {p1Predictions.map(({ label, confidence }, i) => {
-                    const word = getWordByEn(label);
-                    // Russian if it's a game word, otherwise English with underscores replaced
-                    const displayName = word?.ru ?? label.replace(/_/g, " ");
+                    const wordEntry = getWordByEn(label);
+                    const displayName = wordEntry?.ru ?? label.replace(/_/g, " ");
                     const isTarget = label === p1Word?.en;
                     const pct = Math.round(confidence * 100);
                     return (
                       <div key={label} className="flex items-center gap-2">
-                        <span className="text-zinc-600 text-xs w-4">{i + 1}.</span>
-                        <div className="flex-1 h-6 bg-zinc-800 rounded-lg overflow-hidden relative">
+                        <span className="text-xs w-4 font-bold" style={{ color: "var(--text3)" }}>
+                          {i + 1}.
+                        </span>
+                        <div
+                          className="flex-1 h-7 rounded-xl overflow-hidden relative"
+                          style={{ background: "rgba(255,255,255,0.05)" }}
+                        >
                           <div
-                            className="h-full rounded-lg transition-all duration-500"
+                            className="h-full rounded-xl transition-all duration-500"
                             style={{
                               width: `${pct}%`,
-                              background: isTarget ? "#22c55e" : i === 0 ? "#6366f1" : "#374151",
+                              background: isTarget
+                                ? "linear-gradient(90deg,#22c55e,#4ade80)"
+                                : i === 0
+                                ? "linear-gradient(90deg,#6366f1,#8b5cf6)"
+                                : "rgba(255,255,255,0.08)",
+                              boxShadow: isTarget
+                                ? "0 0 12px rgba(34,197,94,0.4)"
+                                : i === 0
+                                ? "0 0 12px rgba(99,102,241,0.3)"
+                                : "none",
                             }}
                           />
-                          <span className="absolute inset-0 flex items-center px-2 text-xs font-medium text-white">
-                            {displayName}
-                            {isTarget && " ✓"}
+                          <span className="absolute inset-0 flex items-center px-3 text-xs font-semibold"
+                                style={{ color: "var(--text)" }}>
+                            {displayName}{isTarget && " ✓"}
                           </span>
                         </div>
-                        <span className="text-zinc-500 text-xs w-8 text-right">{pct}%</span>
+                        <span className="text-xs tabular-nums w-8 text-right font-medium"
+                              style={{ color: "var(--text3)" }}>
+                          {pct}%
+                        </span>
                       </div>
                     );
                   })}
@@ -367,25 +425,38 @@ export default function GamePage() {
               )}
 
               {p1Success && (
-                <p className="text-green-400 text-center font-semibold animate-pulse">
-                  Бот угадал! +{p1TimeLeft * POINTS_PER_SECOND} очков
-                </p>
+                <div
+                  className="rounded-2xl p-4 text-center"
+                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}
+                >
+                  <p className="font-bold text-lg" style={{ color: "var(--green)" }}>
+                    🎉 Бот угадал! +{p1TimeLeft * POINTS_PER_SECOND} очков
+                  </p>
+                </div>
               )}
             </div>
           )}
 
-          {/* ── PHASE 2: Bot draws ────────────────── */}
+          {/* ── PHASE 2: Bot draws ─────────────────────────────────────────── */}
           {phase === "bot_drawing" && p2Word && (
-            <div className="phase-enter bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-4">
+            <div className="phase-enter glass p-5 flex flex-col gap-4">
+
+              {/* Phase header */}
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-zinc-500 text-xs">
-                    {p2BotDone ? "Бот нарисовал — угадай что!" : "Бот рисует — угадывай по ходу!"}
-                  </p>
-                </div>
-                <div className="text-right text-xs text-zinc-500">
-                  <p>Фаза 2</p>
-                  <p>Ты угадываешь</p>
+                <p className="text-sm font-semibold" style={{ color: "var(--text2)" }}>
+                  {p2BotDone
+                    ? "🤖 Бот нарисовал — угадай что!"
+                    : "🤖 Бот рисует — угадывай по ходу!"}
+                </p>
+                <div
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider"
+                  style={{
+                    background: "rgba(139,92,246,0.12)",
+                    border:     "1px solid rgba(139,92,246,0.35)",
+                    color:      "#c084fc",
+                  }}
+                >
+                  Фаза 2
                 </div>
               </div>
 
@@ -401,6 +472,28 @@ export default function GamePage() {
                 onComplete={handleBotDrawingComplete}
               />
 
+              {/* Hint: appears when 15s or less remain */}
+              {!p2GuessCorrect && p2TimeLeft <= 15 && p2TimeLeft > 0 && (
+                <div
+                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl fade-in"
+                  style={{
+                    background: "rgba(251,191,36,0.07)",
+                    border:     "1px solid rgba(251,191,36,0.2)",
+                  }}
+                >
+                  <span className="text-base">💡</span>
+                  <span className="text-sm" style={{ color: "var(--text2)" }}>
+                    Подсказка:{" "}
+                    <span className="font-bold text-white">
+                      {p2Word.ru[0].toUpperCase()}...
+                    </span>
+                    <span className="ml-2 text-xs" style={{ color: "var(--text3)" }}>
+                      {ruLetters(p2Word.ru.replace(/ /g, "").length)}
+                    </span>
+                  </span>
+                </div>
+              )}
+
               <GuessInput
                 onGuess={handleGuess}
                 disabled={p2GuessCorrect}
@@ -408,16 +501,21 @@ export default function GamePage() {
               />
 
               {p2GuessCorrect && (
-                <p className="text-green-400 text-center font-semibold animate-pulse">
-                  Правильно! +{p2EarnedPoints} очков
-                </p>
+                <div
+                  className="rounded-2xl p-4 text-center"
+                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}
+                >
+                  <p className="font-bold text-lg" style={{ color: "var(--green)" }}>
+                    🎉 Правильно! +{p2EarnedPoints} очков
+                  </p>
+                </div>
               )}
             </div>
           )}
 
-          {/* ── ROUND OVER ───────────────────────── */}
+          {/* ── ROUND OVER ─────────────────────────────────────────────────── */}
           {phase === "round_over" && p1Result && p2Result && (
-            <div className="phase-enter bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+            <div className="phase-enter glass p-5">
               <GameOver
                 phase1={p1Result}
                 phase2={p2Result}
@@ -427,6 +525,7 @@ export default function GamePage() {
               />
             </div>
           )}
+
         </div>
       </main>
     </>
