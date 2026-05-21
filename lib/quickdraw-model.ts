@@ -23,12 +23,21 @@ export function isModelReady(): boolean {
   return ready;
 }
 
+/** Resize canvas to targetSize×targetSize before encoding to cut image tokens ~9×. */
+function resizeCanvas(src: HTMLCanvasElement, targetSize = 128): string {
+  const off = document.createElement("canvas");
+  off.width  = targetSize;
+  off.height = targetSize;
+  const ctx = off.getContext("2d");
+  if (!ctx) return "";
+  ctx.drawImage(src, 0, 0, targetSize, targetSize);
+  return off.toDataURL("image/png").split(",")[1] ?? "";
+}
+
 export async function predict(
   canvas: HTMLCanvasElement
 ): Promise<Prediction[]> {
-  // Convert canvas to base64 PNG (no preprocessing needed — Claude handles it)
-  const dataUrl = canvas.toDataURL("image/png");
-  const base64 = dataUrl.split(",")[1];
+  const base64 = resizeCanvas(canvas, 128);
   if (!base64) return [];
 
   try {
