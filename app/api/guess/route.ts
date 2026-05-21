@@ -3,8 +3,9 @@ import { WORD_LIST } from "@/lib/word-list";
 
 // Pre-built lookup for fast server-side matching
 const VALID_WORDS_EN = WORD_LIST.map((w) => w.en);
+// Compact word list string for the prompt (no spaces → fewer tokens)
+const WORD_LIST_STR = VALID_WORDS_EN.join(",");
 
-// Short prompt — no word list sent (saves ~600 tokens per request)
 const GROQ_BODY = (imageBase64: string) => ({
   model: "meta-llama/llama-4-scout-17b-16e-instruct",
   messages: [
@@ -14,14 +15,21 @@ const GROQ_BODY = (imageBase64: string) => ({
         { type: "image_url", image_url: { url: `data:image/png;base64,${imageBase64}` } },
         {
           type: "text",
-          text: `Look at this quick sketch (drawn in under 20 seconds).
-Name the TOP 3 most likely objects or concepts it depicts.
-Reply with ONLY a JSON array of English nouns, example: ["bicycle", "car", "airplane"]`,
+          text: `You are judging a quick drawing game. The player had 30 seconds to sketch something.
+Pick the TOP 3 best matching words from ONLY this list:
+${WORD_LIST_STR}
+
+Rules:
+- Use ONLY words from the list above
+- Order from most likely to least likely
+- The drawing may be rough — focus on overall shape
+
+Reply with ONLY a JSON array, example: ["bicycle","car","airplane"]`,
         },
       ],
     },
   ],
-  max_tokens: 40,
+  max_tokens: 50,
   temperature: 0.1,
 });
 

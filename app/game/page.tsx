@@ -165,7 +165,7 @@ export default function GamePage() {
     predictThrottleRef.current = setTimeout(() => {
       predictThrottleRef.current = null;
       runPredict();
-    }, 2500);
+    }, 1500);
   }, [runPredict]);
 
   // ── Start Phase 1 ─────────────────────────────────────────────────────────
