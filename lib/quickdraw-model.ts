@@ -37,7 +37,7 @@ function resizeCanvas(src: HTMLCanvasElement, targetSize = 128): string {
 export async function predict(
   canvas: HTMLCanvasElement
 ): Promise<Prediction[]> {
-  const base64 = resizeCanvas(canvas, 128);
+  const base64 = resizeCanvas(canvas, 200);
   if (!base64) return [];
 
   try {
