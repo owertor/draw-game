@@ -47,7 +47,7 @@ export default function ModelLoader({ onReady }: ModelLoaderProps) {
             />
           </div>
           <p className="text-zinc-500 text-sm text-center">
-            {Math.round(progress * 100)}% — обрабатываю обучающие рисунки
+            {Math.round(progress * 100)}% — подключаюсь к Claude AI
           </p>
         </div>
       )}

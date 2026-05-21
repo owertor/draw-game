@@ -4,7 +4,7 @@
  * Streams each ndjson file and stops after collecting enough entries.
  */
 
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, access } from "fs/promises";
 import { join } from "path";
 import { WORD_LIST } from "../lib/word-list";
 
@@ -67,10 +67,21 @@ async function main() {
   console.log(`Downloading drawings to ${OUTPUT_DIR}\n`);
 
   for (const { en } of WORD_LIST) {
+    const fileName = en.replace(/ /g, "_");
+    const outPath = join(OUTPUT_DIR, `${fileName}.json`);
+
+    // Skip if already downloaded
+    try {
+      await access(outPath);
+      console.log(`[${en}] — пропущен (уже есть)`);
+      continue;
+    } catch {
+      // file doesn't exist — proceed
+    }
+
     process.stdout.write(`[${en}] `);
     try {
       const drawings = await downloadWord(en);
-      const outPath = join(OUTPUT_DIR, `${en}.json`);
       await writeFile(outPath, JSON.stringify(drawings), "utf-8");
       console.log(`✓ ${drawings.length} drawings saved`);
     } catch (err) {

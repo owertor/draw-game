@@ -8,16 +8,23 @@ const CANVAS_SIZE = 400;
 const SCALE = (CANVAS_SIZE - 40) / 255;
 const OFFSET = 20;
 
-const POINT_DELAY_MS = 12;
-const STROKE_GAP_MS = 120;
+const STROKE_GAP_MS = 200; // pause between strokes (ms)
+const MIN_POINT_DELAY_MS = 8; // floor so animation stays smooth
 
 interface BotCanvasProps {
   drawing: QuickDrawDrawing | null;
   onComplete?: () => void;
   playing?: boolean;
+  /** Target duration for the whole drawing in ms (default 8000 = 8s) */
+  drawDurationMs?: number;
 }
 
-export default function BotCanvas({ drawing, onComplete, playing = true }: BotCanvasProps) {
+export default function BotCanvas({
+  drawing,
+  onComplete,
+  playing = true,
+  drawDurationMs = 8000,
+}: BotCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const completedRef = useRef(false);
@@ -46,6 +53,14 @@ export default function BotCanvas({ drawing, onComplete, playing = true }: BotCa
     ctx.lineWidth = 4;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
+
+    // Compute per-point delay so total drawing time ≈ drawDurationMs
+    const totalPoints = drawing.reduce((sum, stroke) => sum + stroke[0].length, 0);
+    const totalGapTime = drawing.length * STROKE_GAP_MS;
+    const pointDelayMs =
+      totalPoints > 0
+        ? Math.max(MIN_POINT_DELAY_MS, (drawDurationMs - totalGapTime) / totalPoints)
+        : MIN_POINT_DELAY_MS;
 
     let strokeIdx = 0;
     let pointIdx = 0;
@@ -84,7 +99,7 @@ export default function BotCanvas({ drawing, onComplete, playing = true }: BotCa
         }
       }
 
-      if (now - lastTime < POINT_DELAY_MS) {
+      if (now - lastTime < pointDelayMs) {
         rafRef.current = requestAnimationFrame(tick);
         return;
       }
@@ -119,7 +134,7 @@ export default function BotCanvas({ drawing, onComplete, playing = true }: BotCa
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [drawing, playing, onComplete, initCanvas]);
+  }, [drawing, playing, onComplete, initCanvas, drawDurationMs]);
 
   return (
     <canvas

@@ -17,11 +17,10 @@ import { getBestScore, saveGameResult } from "@/lib/storage";
 import { Sounds } from "@/lib/sounds";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const PHASE1_TIME = 20; // seconds: player draws
-const PHASE2_EXTRA = 10; // seconds after bot finishes drawing
-const POINTS_PER_SECOND = 5; // phase1: points per remaining second
-const PHASE2_FULL = 100; // points if guessed before bot finishes
-const PHASE2_PARTIAL = 50; // points in the 10-second window after
+const PHASE1_TIME = 30; // seconds: player draws, bot guesses
+const PHASE2_TIME = 30; // seconds: bot draws, player guesses (timer starts immediately)
+const POINTS_PER_SECOND = 5; // points per remaining second (both phases, max 150)
+const BOT_DRAW_DURATION_MS = 8000; // how long the bot takes to draw (~8s)
 
 type Phase = "idle" | "player_drawing" | "bot_drawing" | "round_over";
 
@@ -54,10 +53,11 @@ export default function GamePage() {
   const [p2Word, setP2Word] = useState<WordEntry | null>(null);
   const [p2Drawing, setP2Drawing] = useState<QuickDrawDrawing | null>(null);
   const [p2BotDone, setP2BotDone] = useState(false);
-  const [p2TimeLeft, setP2TimeLeft] = useState(PHASE2_EXTRA);
+  const [p2TimeLeft, setP2TimeLeft] = useState(PHASE2_TIME);
   const [p2GuessCorrect, setP2GuessCorrect] = useState(false);
   const [p2Result, setP2Result] = useState<RoundResult | null>(null);
   const [p2BotKey, setP2BotKey] = useState(0);
+  const [p2EarnedPoints, setP2EarnedPoints] = useState(0);
 
   // Refs for timers
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -65,7 +65,11 @@ export default function GamePage() {
   const p1SuccessRef = useRef(false);
   const p2GuessCorrectRef = useRef(false);
   const p2BotDoneRef = useRef(false);
+  const p2TimeLeftRef = useRef(PHASE2_TIME);
   const phaseRef = useRef<Phase>("idle");
+  const p1WordRef = useRef<WordEntry | null>(null);
+  const p2WordRef = useRef<WordEntry | null>(null);
+  const p1ResultRef = useRef<RoundResult | null>(null);
 
   // ── Model ──────────────────────────────────────────────────────────────────
   const handleModelReady = useCallback(() => {
@@ -108,14 +112,14 @@ export default function GamePage() {
     (success: boolean, points: number) => {
       if (phaseRef.current !== "bot_drawing") return;
       clearTimer();
-      const p1 = p1Result ?? { word: p1Word?.ru ?? "", success: false, points: 0 };
+      const p1 = p1ResultRef.current ?? { word: p1WordRef.current?.ru ?? "", success: false, points: 0 };
       endRound(p1, {
-        word: p2Word?.ru ?? "",
+        word: p2WordRef.current?.ru ?? "",
         success,
         points,
       });
     },
-    [clearTimer, endRound, p1Result, p1Word, p2Word]
+    [clearTimer, endRound]
   );
 
   // ── Phase 1: realtime prediction ──────────────────────────────────────────
@@ -126,8 +130,8 @@ export default function GamePage() {
     const results = await predict(canvas);
     setP1Predictions(results);
 
-    // Check if bot guessed correctly
-    if (p1Word && results[0] && results[0].label === p1Word.en) {
+    // Check if bot guessed correctly — target word anywhere in top-5
+    if (p1Word && results.some((r) => r.label === p1Word.en)) {
       p1SuccessRef.current = true;
       setP1Success(true);
       Sounds.correct();
@@ -135,6 +139,7 @@ export default function GamePage() {
       const timeBonus = p1TimeLeft;
       const points = timeBonus * POINTS_PER_SECOND;
       const result: RoundResult = { word: p1Word.ru, success: true, points };
+      p1ResultRef.current = result;
       setP1Result(result);
       // Start phase 2 after brief delay
       setTimeout(() => startPhase2(), 1500);
@@ -154,6 +159,7 @@ export default function GamePage() {
     Sounds.start();
     const word = getRandomWord();
     p1SuccessRef.current = false;
+    p1WordRef.current = word;
     setP1Word(word);
     setP1TimeLeft(PHASE1_TIME);
     setP1Predictions([]);
@@ -171,6 +177,7 @@ export default function GamePage() {
         timerRef.current = null;
         if (!p1SuccessRef.current) {
           const result: RoundResult = { word: word.ru, success: false, points: 0 };
+          p1ResultRef.current = result;
           setP1Result(result);
           setTimeout(() => startPhase2(), 1200);
         }
@@ -187,28 +194,25 @@ export default function GamePage() {
 
     p2GuessCorrectRef.current = false;
     p2BotDoneRef.current = false;
+    p2TimeLeftRef.current = PHASE2_TIME;
 
+    p2WordRef.current = word;
     setP2Word(word);
     setP2Drawing(drawingEntry?.strokes ?? null);
     setP2BotDone(false);
-    setP2TimeLeft(PHASE2_EXTRA);
+    setP2TimeLeft(PHASE2_TIME);
     setP2GuessCorrect(false);
     setP2Result(null);
+    setP2EarnedPoints(0);
     setP2BotKey((k) => k + 1);
     setPhase("bot_drawing");
     phaseRef.current = "bot_drawing";
-  }, [p1Word]);
 
-  // ── Phase 2: bot drawing complete ─────────────────────────────────────────
-  const handleBotDrawingComplete = useCallback(() => {
-    if (p2GuessCorrectRef.current) return; // already guessed
-    p2BotDoneRef.current = true;
-    setP2BotDone(true);
-    setP2TimeLeft(PHASE2_EXTRA);
-
-    let t = PHASE2_EXTRA;
+    // Timer starts immediately — player can guess while bot draws for more points
+    let t = PHASE2_TIME;
     timerRef.current = setInterval(() => {
       t--;
+      p2TimeLeftRef.current = t;
       setP2TimeLeft(t);
       if (t <= 0) {
         clearInterval(timerRef.current!);
@@ -218,7 +222,15 @@ export default function GamePage() {
         }
       }
     }, 1000);
-  }, [endPhase2]);
+  }, [p1Word, endPhase2]);
+
+  // ── Phase 2: bot drawing complete ─────────────────────────────────────────
+  const handleBotDrawingComplete = useCallback(() => {
+    if (p2GuessCorrectRef.current) return; // already guessed
+    p2BotDoneRef.current = true;
+    setP2BotDone(true);
+    // Timer is already running — no new timer needed
+  }, []);
 
   // ── Phase 2: player guess ──────────────────────────────────────────────────
   const handleGuess = useCallback(
@@ -229,8 +241,9 @@ export default function GamePage() {
         setP2GuessCorrect(true);
         Sounds.correct();
         clearTimer();
-        // Points: full if guessed before bot finished, partial after
-        const points = p2BotDoneRef.current ? PHASE2_PARTIAL : PHASE2_FULL;
+        // Points based on time remaining — guess early for more points
+        const points = p2TimeLeftRef.current * POINTS_PER_SECOND;
+        setP2EarnedPoints(points);
         setTimeout(() => endPhase2(true, points), 800);
       }
     },
@@ -285,7 +298,7 @@ export default function GamePage() {
             <div className="phase-enter bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center gap-6">
               <div className="text-center">
                 <p className="text-zinc-400 mb-2">Нажми, чтобы начать</p>
-                <p className="text-zinc-500 text-sm">Бот распознаёт рисунки с помощью TF.js</p>
+                <p className="text-zinc-500 text-sm">Бот распознаёт рисунки с помощью Claude AI</p>
               </div>
               <button
                 onClick={startPhase1}
@@ -326,6 +339,9 @@ export default function GamePage() {
                   <p className="text-zinc-500 text-xs">Бот думает:</p>
                   {p1Predictions.map(({ label, confidence }, i) => {
                     const word = getWordByEn(label);
+                    // Russian if it's a game word, otherwise English with underscores replaced
+                    const displayName = word?.ru ?? label.replace(/_/g, " ");
+                    const isTarget = label === p1Word?.en;
                     const pct = Math.round(confidence * 100);
                     return (
                       <div key={label} className="flex items-center gap-2">
@@ -333,10 +349,14 @@ export default function GamePage() {
                         <div className="flex-1 h-6 bg-zinc-800 rounded-lg overflow-hidden relative">
                           <div
                             className="h-full rounded-lg transition-all duration-500"
-                            style={{ width: `${pct}%`, background: i === 0 ? "#6366f1" : "#374151" }}
+                            style={{
+                              width: `${pct}%`,
+                              background: isTarget ? "#22c55e" : i === 0 ? "#6366f1" : "#374151",
+                            }}
                           />
                           <span className="absolute inset-0 flex items-center px-2 text-xs font-medium text-white">
-                            {word?.ru ?? label}
+                            {displayName}
+                            {isTarget && " ✓"}
                           </span>
                         </div>
                         <span className="text-zinc-500 text-xs w-8 text-right">{pct}%</span>
@@ -360,11 +380,8 @@ export default function GamePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-zinc-500 text-xs">
-                    {p2BotDone ? "Бот нарисовал. Угадай:" : "Бот рисует…"}
+                    {p2BotDone ? "Бот нарисовал — угадай что!" : "Бот рисует — угадывай по ходу!"}
                   </p>
-                  {p2BotDone && !p2GuessCorrect && (
-                    <p className="text-zinc-400 text-sm">Осталось времени:</p>
-                  )}
                 </div>
                 <div className="text-right text-xs text-zinc-500">
                   <p>Фаза 2</p>
@@ -372,14 +389,15 @@ export default function GamePage() {
                 </div>
               </div>
 
-              {p2BotDone && !p2GuessCorrect && (
-                <Timer seconds={p2TimeLeft} maxSeconds={PHASE2_EXTRA} />
+              {!p2GuessCorrect && (
+                <Timer seconds={p2TimeLeft} maxSeconds={PHASE2_TIME} />
               )}
 
               <BotCanvas
                 key={p2BotKey}
                 drawing={p2Drawing}
                 playing={true}
+                drawDurationMs={BOT_DRAW_DURATION_MS}
                 onComplete={handleBotDrawingComplete}
               />
 
@@ -391,7 +409,7 @@ export default function GamePage() {
 
               {p2GuessCorrect && (
                 <p className="text-green-400 text-center font-semibold animate-pulse">
-                  Правильно! +{p2BotDoneRef.current ? PHASE2_PARTIAL : PHASE2_FULL} очков
+                  Правильно! +{p2EarnedPoints} очков
                 </p>
               )}
             </div>

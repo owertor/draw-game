@@ -1,23 +1,19 @@
-import Fuse from "fuse.js";
 import { WORD_LIST } from "./word-list";
 
-// Build a flat list of all valid answers per word: {answer, wordEn}
-const entries = WORD_LIST.flatMap((w) =>
-  w.synonyms.map((syn) => ({ answer: syn.toLowerCase(), wordEn: w.en }))
-);
+// Normalize: lowercase + ё→е
+// (на многих клавиатурах нет буквы ё — принимаем оба варианта)
+function normalize(s: string): string {
+  return s.trim().toLowerCase().replace(/ё/g, "е");
+}
 
-const fuse = new Fuse(entries, {
-  keys: ["answer"],
-  threshold: 0.35, // 0=exact, 1=match anything
-  includeScore: true,
-  minMatchCharLength: 2,
-});
+// Precompute: wordEn → Set of valid answers (all synonyms, normalized)
+const answerMap = new Map<string, Set<string>>();
+for (const word of WORD_LIST) {
+  answerMap.set(word.en, new Set(word.synonyms.map(normalize)));
+}
 
 export function checkAnswer(userInput: string, correctWordEn: string): boolean {
-  const input = userInput.trim().toLowerCase();
+  const input = normalize(userInput);
   if (!input) return false;
-  const results = fuse.search(input);
-  if (results.length === 0) return false;
-  // The best match must point to the correct word
-  return results[0].item.wordEn === correctWordEn;
+  return answerMap.get(correctWordEn)?.has(input) ?? false;
 }
