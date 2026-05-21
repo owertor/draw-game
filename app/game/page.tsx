@@ -72,6 +72,7 @@ export default function GamePage() {
   // Refs for timers
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const predictThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const predictInFlightRef = useRef(false);
   const p1SuccessRef = useRef(false);
   const p2GuessCorrectRef = useRef(false);
   const p2BotDoneRef = useRef(false);
@@ -135,9 +136,12 @@ export default function GamePage() {
   // ── Phase 1: realtime prediction ──────────────────────────────────────────
   const runPredict = useCallback(async () => {
     if (!modelReadyRef.current || p1SuccessRef.current) return;
+    if (predictInFlightRef.current) return; // skip if previous request still running
     const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
     if (!canvas) return;
+    predictInFlightRef.current = true;
     const results = await predict(canvas);
+    predictInFlightRef.current = false;
     setP1Predictions(results);
 
     // Check if bot guessed correctly — target word anywhere in top-5
@@ -161,7 +165,7 @@ export default function GamePage() {
     predictThrottleRef.current = setTimeout(() => {
       predictThrottleRef.current = null;
       runPredict();
-    }, 500);
+    }, 1500);
   }, [runPredict]);
 
   // ── Start Phase 1 ─────────────────────────────────────────────────────────
