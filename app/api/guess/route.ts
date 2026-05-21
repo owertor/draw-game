@@ -39,7 +39,7 @@ Reply with ONLY a JSON array, example: ["bicycle", "car", "airplane"]`,
 async function callGroq(
   imageBase64: string,
   groqKey: string,
-  maxRetries = 2
+  maxRetries = 1
 ): Promise<Response> {
   let lastResponse: Response | null = null;
 
