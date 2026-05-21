@@ -93,8 +93,7 @@ export async function POST(request: NextRequest) {
     const { imageBase64 } = await request.json();
     if (!imageBase64) return NextResponse.json({ predictions: [] }, { status: 400 });
 
-    const raw = process.env.GROQ_API_KEY ?? "";
-    const keys = raw.split(",").map((k) => k.trim()).filter(Boolean);
+    const keys = (process.env.GROQ_API_KEY ?? "").split(",").map((k) => k.trim()).filter(Boolean);
     if (keys.length === 0) {
       console.error("[/api/guess] GROQ_API_KEY is not set");
       return NextResponse.json({ predictions: [] }, { status: 500 });
@@ -114,12 +113,12 @@ export async function POST(request: NextRequest) {
     const text = data.choices?.[0]?.message?.content?.trim() ?? "";
 
     const match = text.match(/\[[\s\S]*?\]/);
-    const raw: unknown[] = match ? JSON.parse(match[0]) : [];
+    const parsed: unknown[] = match ? JSON.parse(match[0]) : [];
 
     // Server-side fuzzy match against word list (no need to send the list to the model)
     const seen = new Set<string>();
     const predictions: string[] = [];
-    for (const p of raw) {
+    for (const p of parsed) {
       if (typeof p !== "string") continue;
       const matched = matchToWordList(p);
       if (matched && !seen.has(matched)) {
