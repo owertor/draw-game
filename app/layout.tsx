@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import AuthGate from "@/components/AuthGate";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -40,7 +39,6 @@ export default function RootLayout({
           <AuthGate />
           {children}
         </AuthProvider>
-        <ThemeToggle />
       </body>
     </html>
   );

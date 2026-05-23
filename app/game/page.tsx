@@ -368,7 +368,7 @@ function GameContent() {
         {/* Header */}
         <header className="w-full max-w-lg flex items-center justify-between pt-3">
           <Link
-            href="/"
+            href="/dashboard"
             className="text-sm font-semibold transition-opacity hover:opacity-60"
             style={{ color: "var(--text2)" }}
           >

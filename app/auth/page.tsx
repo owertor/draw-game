@@ -8,7 +8,12 @@ import { supabase } from "@/lib/supabase";
 
 export default function AuthPage() {
   const router = useRouter();
-  const { signIn, signUp, signInGoogle } = useAuth();
+  const { signIn, signUp, signInGoogle, user, loading: authLoading } = useAuth();
+
+  // Already logged in → go straight to dashboard
+  useEffect(() => {
+    if (!authLoading && user) router.replace("/dashboard");
+  }, [user, authLoading, router]);
 
   const [tab,       setTab]       = useState<"login" | "register">("login");
   const [email,     setEmail]     = useState("");
@@ -41,7 +46,7 @@ export default function AuthPage() {
     if (tab === "login") {
       const { error } = await signIn(email, password);
       if (error) { setError("Неверный email или пароль"); setLoading(false); return; }
-      router.push("/");
+      router.push("/dashboard");
     } else {
       if (!nickname.trim()) { setError("Введи никнейм"); setLoading(false); return; }
       if (nickState === "taken") { setError("Никнейм занят"); setLoading(false); return; }
@@ -172,7 +177,7 @@ export default function AuthPage() {
         </div>
 
         <Link href="/" className="text-center text-sm hover:opacity-80" style={{ color: "var(--text2)" }}>
-          ← Назад в меню
+          ← На главную
         </Link>
       </div>
     </main>
