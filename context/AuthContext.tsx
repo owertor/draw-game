@@ -9,7 +9,7 @@ interface AuthContextValue {
   session:       Session | null;
   profile:       Profile | null;
   loading:       boolean;
-  signUp:        (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp:        (email: string, password: string, nickname: string) => Promise<{ error: string | null }>;
   signIn:        (email: string, password: string) => Promise<{ error: string | null }>;
   signInGoogle:  () => Promise<{ error: string | null }>;
   signOut:       () => Promise<void>;
@@ -34,6 +34,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(data ?? null);
   }, []);
 
+  /** Try to auto-create profile from auth metadata (Google name or email signup data). */
+  const tryAutoCreateProfile = useCallback(async (user: User) => {
+    // Already has profile?
+    const { data: existing } = await supabase.from("profiles").select("id").eq("id", user.id).single();
+    if (existing) return;
+
+    // Try to get a nickname from metadata
+    const meta = user.user_metadata ?? {};
+    const candidate: string =
+      meta.nickname ||           // set during email signup
+      meta.full_name ||          // Google
+      meta.name ||               // Google fallback
+      "";
+
+    if (!candidate.trim()) return; // no metadata → show modal
+
+    // Check if nickname is free; if taken, append digits until free
+    let nickname = candidate.trim().slice(0, 20);
+    let suffix = 0;
+    while (true) {
+      const attempt = suffix === 0 ? nickname : `${nickname.slice(0, 17)}${suffix}`;
+      const { data: taken } = await supabase.from("profiles").select("id").eq("nickname", attempt).maybeSingle();
+      if (!taken) { nickname = attempt; break; }
+      suffix++;
+      if (suffix > 99) return; // give up, show modal
+    }
+
+    const avatar = meta.avatar_url ? "🎨" : "🎨"; // default
+    await supabase.from("profiles").insert({ id: user.id, nickname, avatar });
+    await loadProfile(user.id);
+  }, [loadProfile]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -45,15 +77,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) loadProfile(session.user.id);
-      else setProfile(null);
+      if (session?.user) {
+        loadProfile(session.user.id).then(async () => {
+          // Auto-create profile from metadata if still missing
+          const { data } = await supabase.from("profiles").select("id").eq("id", session.user.id).single();
+          if (!data) tryAutoCreateProfile(session.user);
+        });
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, [loadProfile]);
 
-  const signUp = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+  const signUp = useCallback(async (email: string, password: string, nickname: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { nickname } },
+    });
     return { error: error?.message ?? null };
   }, []);
 

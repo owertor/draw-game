@@ -1,20 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export default function AuthPage() {
   const router = useRouter();
   const { signIn, signUp, signInGoogle } = useAuth();
 
-  const [tab,      setTab]      = useState<"login" | "register">("login");
-  const [email,    setEmail]    = useState("");
-  const [password, setPassword] = useState("");
-  const [error,    setError]    = useState("");
-  const [loading,  setLoading]  = useState(false);
-  const [success,  setSuccess]  = useState("");
+  const [tab,       setTab]       = useState<"login" | "register">("login");
+  const [email,     setEmail]     = useState("");
+  const [password,  setPassword]  = useState("");
+  const [nickname,  setNickname]  = useState("");
+  const [nickState, setNickState] = useState<"idle" | "checking" | "free" | "taken">("idle");
+  const [error,     setError]     = useState("");
+  const [loading,   setLoading]   = useState(false);
+  const [success,   setSuccess]   = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Real-time nickname availability check
+  useEffect(() => {
+    if (tab !== "register" || nickname.trim().length < 2) { setNickState("idle"); return; }
+    setNickState("checking");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const { data } = await supabase.from("profiles").select("id").eq("nickname", nickname.trim()).maybeSingle();
+      setNickState(data ? "taken" : "free");
+    }, 500);
+  }, [nickname, tab]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +43,10 @@ export default function AuthPage() {
       if (error) { setError("Неверный email или пароль"); setLoading(false); return; }
       router.push("/");
     } else {
-      const { error } = await signUp(email, password);
+      if (!nickname.trim()) { setError("Введи никнейм"); setLoading(false); return; }
+      if (nickState === "taken") { setError("Никнейм занят"); setLoading(false); return; }
+      if (nickState === "checking") { setError("Подожди, проверяем никнейм…"); setLoading(false); return; }
+      const { error } = await signUp(email, password, nickname.trim());
       if (error) {
         setError(error.includes("already") ? "Этот email уже зарегистрирован" : error);
         setLoading(false); return;
@@ -100,6 +118,31 @@ export default function AuthPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            {tab === "register" && (
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Никнейм"
+                  value={nickname}
+                  onChange={(e) => { setNickname(e.target.value); setError(""); }}
+                  maxLength={20}
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-10"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: `1px solid ${nickState === "free" ? "var(--green)" : nickState === "taken" ? "var(--red)" : "var(--border)"}`,
+                    color: "var(--text)",
+                  }}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm">
+                  {nickState === "checking" && <span style={{ color: "var(--text3)" }}>…</span>}
+                  {nickState === "free"     && <span style={{ color: "var(--green)" }}>✓</span>}
+                  {nickState === "taken"    && <span style={{ color: "var(--red)" }}>✗</span>}
+                </span>
+                {nickState === "taken" && (
+                  <p className="text-xs mt-1" style={{ color: "var(--red)" }}>Никнейм занят</p>
+                )}
+              </div>
+            )}
             <input
               type="email"
               placeholder="Email"
@@ -120,7 +163,7 @@ export default function AuthPage() {
             {success && <p className="text-xs" style={{ color: "var(--green)" }}>{success}</p>}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (tab === "register" && nickState === "taken")}
               className="btn-primary py-3 rounded-xl font-bold disabled:opacity-40"
             >
               {loading ? "…" : tab === "login" ? "Войти" : "Зарегистрироваться"}
