@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import BotCanvas from "@/components/BotCanvas";
@@ -9,12 +10,17 @@ import Timer from "@/components/Timer";
 import GuessInput from "@/components/GuessInput";
 import ScoreBoard from "@/components/ScoreBoard";
 import GameOver from "@/components/GameOver";
+import AchievementToast from "@/components/AchievementToast";
 import { predict, type Prediction } from "@/lib/quickdraw-model";
 import { checkAnswer } from "@/lib/fuzzy-match";
 import { WORD_LIST, getRandomWord, getWordByEn, type WordEntry } from "@/lib/word-list";
 import { getRandomDrawing, type QuickDrawDrawing } from "@/lib/drawings-loader";
 import { getBestScore, saveGameResult } from "@/lib/storage";
 import { Sounds } from "@/lib/sounds";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { getAchievement, type Achievement } from "@/lib/achievements";
+import { getDailyWord, getTodayDate } from "@/lib/daily";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 /** Russian plural form: 1 буква / 2 буквы / 5 букв */
@@ -42,8 +48,31 @@ interface RoundResult {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function GamePage() {
+  const searchParams  = useSearchParams();
+  const isDaily       = searchParams.get("daily") === "true";
+  const { user, profile, refreshProfile } = useAuth();
+
   const [modelReady, setModelReady] = useState(false);
   const modelReadyRef = useRef(false);
+
+  // Achievements
+  const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
+  const earnedRef = useRef<Set<string>>(new Set());
+
+  // Load already-earned achievements so we don't re-award them
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_achievements").select("achievement_id").eq("user_id", user.id)
+      .then(({ data }) => { data?.forEach((r) => earnedRef.current.add(r.achievement_id)); });
+  }, [user]);
+
+  const awardAchievement = useCallback(async (id: string) => {
+    if (!user || earnedRef.current.has(id)) return;
+    earnedRef.current.add(id);
+    await supabase.from("user_achievements").insert({ user_id: user.id, achievement_id: id }).select().maybeSingle();
+    const a = getAchievement(id);
+    if (a) setToastAchievement(a);
+  }, [user]);
 
   // Game state
   const [phase, setPhase] = useState<Phase>("idle");
@@ -109,13 +138,46 @@ export default function GamePage() {
       setSessionScore((prev) => {
         const newTotal = prev + total;
         saveGameResult(newTotal);
+
+        // Save to Supabase when logged in
+        if (user) {
+          supabase.from("game_results").insert({ user_id: user.id, score: newTotal, rounds_played: roundNumber });
+
+          // Daily challenge result
+          if (isDaily) {
+            supabase.from("daily_results")
+              .insert({ user_id: user.id, date: getTodayDate(), score: newTotal })
+              .then(() => awardAchievement("daily_played"));
+          }
+
+          // Update profile stats
+          const newBest = Math.max(newTotal, profile?.best_score ?? 0);
+          supabase.from("profiles").update({
+            total_score: (profile?.total_score ?? 0) + total,
+            games_played: (profile?.games_played ?? 0) + 1,
+            best_score: newBest,
+          }).eq("id", user.id).then(() => refreshProfile());
+
+          // Score achievements
+          if (newTotal >= 500) awardAchievement("score_500");
+          if (newTotal >= 1000) awardAchievement("score_1000");
+
+          // Games played achievements
+          const gamesPlayed = (profile?.games_played ?? 0) + 1;
+          if (gamesPlayed >= 10) awardAchievement("artist_10");
+          if (gamesPlayed >= 50) awardAchievement("artist_50");
+
+          // Perfect phase (max points in a phase = 150)
+          if (p1.points >= 150 || p2.points >= 150) awardAchievement("perfect_phase");
+        }
+
         return newTotal;
       });
       setBestScore(getBestScore());
       setPhase("round_over");
       phaseRef.current = "round_over";
     },
-    [clearTimer]
+    [clearTimer, user, profile, roundNumber, isDaily, awardAchievement, refreshProfile]
   );
 
   // ── Phase 2 end ───────────────────────────────────────────────────────────
@@ -155,6 +217,9 @@ export default function GamePage() {
       const result: RoundResult = { word: p1Word.ru, success: true, points };
       p1ResultRef.current = result;
       setP1Result(result);
+      // Achievements
+      awardAchievement("first_guess");
+      if (timeBonus > 20) awardAchievement("lightning");
       // Start phase 2 after brief delay
       setTimeout(() => startPhase2(), 1500);
     }
@@ -201,9 +266,13 @@ export default function GamePage() {
 
   // ── Start Phase 2 ─────────────────────────────────────────────────────────
   const startPhase2 = useCallback(async () => {
-    // Pick a different word from p1 if possible
-    const available = WORD_LIST.filter((w) => w.en !== p1Word?.en);
-    const word = available[Math.floor(Math.random() * available.length)];
+    // Daily challenge: use today's word; otherwise pick a random different word
+    const word = isDaily
+      ? getDailyWord()
+      : (() => {
+          const available = WORD_LIST.filter((w) => w.en !== p1Word?.en);
+          return available[Math.floor(Math.random() * available.length)];
+        })();
     const drawingEntry = await getRandomDrawing(word.en);
 
     p2GuessCorrectRef.current = false;
@@ -236,7 +305,7 @@ export default function GamePage() {
         }
       }
     }, 1000);
-  }, [p1Word, endPhase2]);
+  }, [p1Word, endPhase2, isDaily]);
 
   // ── Phase 2: bot drawing complete ─────────────────────────────────────────
   const handleBotDrawingComplete = useCallback(() => {
@@ -258,6 +327,8 @@ export default function GamePage() {
         // Points based on time remaining — guess early for more points
         const points = p2TimeLeftRef.current * POINTS_PER_SECOND;
         setP2EarnedPoints(points);
+        // Achievement: guessed before bot finished drawing
+        if (!p2BotDoneRef.current) awardAchievement("guesser");
         setTimeout(() => endPhase2(true, points), 800);
       }
     },
@@ -285,6 +356,7 @@ export default function GamePage() {
   return (
     <>
       <ModelLoader onReady={handleModelReady} />
+      <AchievementToast achievement={toastAchievement} onDone={() => setToastAchievement(null)} />
 
       <main className="flex flex-col items-center min-h-screen p-4 gap-4 pb-10">
 

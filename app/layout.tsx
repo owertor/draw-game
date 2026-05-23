@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
+import AuthGate from "@/components/AuthGate";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -26,7 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className={`h-full ${inter.variable}`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>
+          <AuthGate />
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }
