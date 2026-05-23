@@ -472,7 +472,7 @@ function GameContent() {
                         </span>
                         <div
                           className="flex-1 h-7 rounded-xl overflow-hidden relative"
-                          style={{ background: "rgba(255,255,255,0.05)" }}
+                          style={{ background: "var(--input-bg)" }}
                         >
                           <div
                             className="h-full rounded-xl transition-all duration-500"
@@ -482,7 +482,7 @@ function GameContent() {
                                 ? "linear-gradient(90deg,#22c55e,#4ade80)"
                                 : i === 0
                                 ? "linear-gradient(90deg,#6366f1,#8b5cf6)"
-                                : "rgba(255,255,255,0.08)",
+                                : "var(--border)",
                               boxShadow: isTarget
                                 ? "0 0 12px rgba(34,197,94,0.4)"
                                 : i === 0

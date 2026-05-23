@@ -78,7 +78,7 @@ export default function AuthPage() {
           {/* Tabs */}
           <div
             className="flex rounded-xl p-1 gap-1"
-            style={{ background: "rgba(255,255,255,0.04)" }}
+            style={{ background: "var(--item-bg)" }}
           >
             {(["login", "register"] as const).map((t) => (
               <button
@@ -99,7 +99,7 @@ export default function AuthPage() {
           <button
             onClick={handleGoogle}
             className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-80"
-            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid var(--border)", color: "var(--text)" }}
+            style={{ background: "var(--card-hover)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
             <svg width="18" height="18" viewBox="0 0 48 48">
               <path fill="#4285F4" d="M45.5 24.5c0-1.5-.1-3-.4-4.5H24v8.5h12.1c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.2-3.9 6.7-9.6 6.7-16.2z"/>
@@ -128,7 +128,7 @@ export default function AuthPage() {
                   maxLength={20}
                   className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-10"
                   style={{
-                    background: "rgba(255,255,255,0.05)",
+                    background: "var(--input-bg)",
                     border: `1px solid ${nickState === "free" ? "var(--green)" : nickState === "taken" ? "var(--red)" : "var(--border)"}`,
                     color: "var(--text)",
                   }}
@@ -149,7 +149,7 @@ export default function AuthPage() {
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
             <input
               type="password"
@@ -157,7 +157,7 @@ export default function AuthPage() {
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", color: "var(--text)" }}
+              style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text)" }}
             />
             {error   && <p className="text-xs" style={{ color: "var(--red)" }}>{error}</p>}
             {success && <p className="text-xs" style={{ color: "var(--green)" }}>{success}</p>}

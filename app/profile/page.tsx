@@ -81,7 +81,7 @@ export default function ProfilePage() {
                   <button key={em} type="button" onClick={() => setAvatar(em)}
                     className="text-xl rounded-xl p-2 transition-all"
                     style={{
-                      background: avatar === em ? "var(--accent-dim)" : "rgba(255,255,255,0.04)",
+                      background: avatar === em ? "var(--accent-dim)" : "var(--item-bg)",
                       border: avatar === em ? "1px solid var(--border-accent)" : "1px solid transparent",
                     }}
                   >{em}</button>
@@ -92,13 +92,13 @@ export default function ProfilePage() {
                 onChange={(e) => { setNickname(e.target.value); setError(""); }}
                 maxLength={20}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none text-center font-bold"
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", color: "var(--text)" }}
+                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text)" }}
               />
               {error && <p className="text-xs text-center" style={{ color: "var(--red)" }}>{error}</p>}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setEditing(false)}
                   className="flex-1 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", color: "var(--text2)" }}
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text2)" }}
                 >Отмена</button>
                 <button type="submit" disabled={saving} className="flex-1 btn-primary py-2 rounded-xl text-sm font-bold disabled:opacity-40">
                   {saving ? "…" : "Сохранить"}
@@ -116,7 +116,7 @@ export default function ProfilePage() {
               </div>
               <button onClick={() => setEditing(true)}
                 className="text-xs px-4 py-1.5 rounded-lg font-semibold"
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", color: "var(--text2)" }}
+                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text2)" }}
               >✏️ Изменить</button>
             </>
           )}
@@ -131,7 +131,7 @@ export default function ProfilePage() {
             { label: "🔥 Стрик",      value: `${profile.current_streak} дн.`, gold: false },
           ].map(({ label, value, gold }) => (
             <div key={label} className="rounded-xl p-3 text-center"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)" }}>
+              style={{ background: "var(--subtle-bg)", border: "1px solid var(--border)" }}>
               <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--text3)" }}>{label}</p>
               <p className="text-xl font-black tabular-nums" style={{ color: gold ? "var(--yellow)" : "var(--text)" }}>{value}</p>
             </div>
@@ -149,9 +149,9 @@ export default function ProfilePage() {
               return (
                 <div key={a.id} className="flex items-center gap-3 px-4 py-3 rounded-xl"
                   style={{
-                    background: done ? "rgba(99,102,241,0.08)" : "rgba(255,255,255,0.02)",
-                    border: done ? "1px solid rgba(99,102,241,0.25)" : "1px solid var(--border)",
-                    opacity: done ? 1 : 0.45,
+                    background: done ? "var(--achievement-done-bg)" : "var(--item-bg)",
+                    border: done ? "1px solid var(--achievement-done-border)" : "1px solid var(--border)",
+                    opacity: done ? 1 : 0.5,
                   }}
                 >
                   <span className="text-2xl">{a.emoji}</span>

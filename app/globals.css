@@ -2,10 +2,11 @@
 
 /* ── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
+  /* dark theme (default) */
   --bg:            #07070f;
   --bg2:           #0d0d1b;
   --card:          rgba(255, 255, 255, 0.04);
-  --card-hover:    rgba(255, 255, 255, 0.06);
+  --card-hover:    rgba(255, 255, 255, 0.07);
   --border:        rgba(255, 255, 255, 0.08);
   --border-accent: rgba(99, 102, 241, 0.45);
 
@@ -15,12 +16,50 @@
   --violet:        #8b5cf6;
 
   --text:          #f0f0f8;
-  --text2:         rgba(240, 240, 248, 0.5);
-  --text3:         rgba(240, 240, 248, 0.25);
+  --text2:         rgba(240, 240, 248, 0.50);
+  --text3:         rgba(240, 240, 248, 0.28);
 
   --green:         #22c55e;
   --red:           #f87171;
   --yellow:        #fbbf24;
+
+  /* shared semantic tokens */
+  --item-bg:    rgba(255, 255, 255, 0.04); /* list rows, cards */
+  --subtle-bg:  rgba(255, 255, 255, 0.03); /* alternating rows, faint surface */
+  --input-bg:   rgba(255, 255, 255, 0.05); /* form inputs, secondary buttons */
+
+  --achievement-done-bg:     rgba(99, 102, 241, 0.10);
+  --achievement-done-border: rgba(99, 102, 241, 0.28);
+}
+
+/* ── Light theme ────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:            #f0f0fa;
+  --bg2:           #e6e6f5;
+  --card:          rgba(0, 0, 0, 0.04);
+  --card-hover:    rgba(0, 0, 0, 0.07);
+  --border:        rgba(0, 0, 0, 0.10);
+  --border-accent: rgba(99, 102, 241, 0.45);
+
+  --accent:        #5254d4;
+  --accent-bright: #4648c2;
+  --accent-dim:    rgba(99, 102, 241, 0.12);
+  --violet:        #7c3aed;
+
+  --text:          #0d0d1e;
+  --text2:         rgba(13, 13, 30, 0.55);
+  --text3:         rgba(13, 13, 30, 0.38);
+
+  --green:         #16a34a;
+  --red:           #dc2626;
+  --yellow:        #d97706;
+
+  --item-bg:    rgba(0, 0, 0, 0.04);
+  --subtle-bg:  rgba(0, 0, 0, 0.03);
+  --input-bg:   rgba(0, 0, 0, 0.05);
+
+  --achievement-done-bg:     rgba(99, 102, 241, 0.10);
+  --achievement-done-border: rgba(99, 102, 241, 0.30);
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────────── */
@@ -36,6 +75,13 @@ body {
   padding-left:   env(safe-area-inset-left);
   padding-right:  env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Light-mode body gradient */
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 0%,   rgba(99, 102, 241, 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 100%,  rgba(139, 92, 246, 0.05) 0%, transparent 70%);
 }
 
 /* ── Utility classes ────────────────────────────────────────────────────────── */

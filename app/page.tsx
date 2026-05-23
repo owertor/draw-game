@@ -72,7 +72,7 @@ export default function Home() {
         {/* Auth bar */}
         {!loading && (
           <div className="flex items-center justify-between px-4 py-2.5 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)" }}
+            style={{ background: "var(--subtle-bg)", border: "1px solid var(--border)" }}
           >
             {user && profile ? (
               <>
@@ -89,7 +89,7 @@ export default function Home() {
                     Профиль
                   </Link>
                   <Link href="/leaderboard" className="text-xs px-3 py-1.5 rounded-lg font-semibold hover:opacity-80"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+                    style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text2)" }}>
                     🏆
                   </Link>
                 </div>
@@ -126,7 +126,7 @@ export default function Home() {
             href={`/game?daily=true`}
             className="text-xs px-3 py-2 rounded-xl font-bold shrink-0 hover:opacity-80"
             style={{
-              background: dailyDone ? "rgba(255,255,255,0.05)" : "rgba(251,191,36,0.15)",
+              background: dailyDone ? "var(--input-bg)" : "rgba(251,191,36,0.15)",
               border: "1px solid rgba(251,191,36,0.3)",
               color: "var(--yellow)",
               opacity: dailyDone ? 0.5 : 1,
@@ -149,10 +149,10 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-2.5">
             {HOW_TO.map(({ icon, title, sub }) => (
               <div key={title} className="rounded-xl p-3"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "var(--subtle-bg)", border: "1px solid var(--border)" }}
               >
                 <div className="text-xl mb-1">{icon}</div>
-                <p className="text-sm font-semibold text-white leading-tight">{title}</p>
+                <p className="text-sm font-semibold leading-tight" style={{ color: "var(--text)" }}>{title}</p>
                 <p className="text-xs mt-0.5" style={{ color: "var(--text3)" }}>{sub}</p>
               </div>
             ))}
@@ -160,7 +160,7 @@ export default function Home() {
 
           <Link href="/leaderboard"
             className="w-full py-2.5 rounded-xl text-center text-sm font-semibold hover:opacity-80 transition-opacity"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", color: "var(--text2)" }}
+            style={{ background: "var(--subtle-bg)", border: "1px solid var(--border)", color: "var(--text2)" }}
           >
             🏆 Таблица лидеров
           </Link>

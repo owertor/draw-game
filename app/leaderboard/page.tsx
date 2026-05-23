@@ -56,7 +56,7 @@ export default function LeaderboardPage() {
 
       <div className="w-full max-w-lg flex flex-col gap-4">
         {/* Tabs */}
-        <div className="flex rounded-xl p-1 gap-1" style={{ background: "rgba(255,255,255,0.04)" }}>
+        <div className="flex rounded-xl p-1 gap-1" style={{ background: "var(--item-bg)" }}>
           {(["alltime", "daily"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
@@ -84,7 +84,7 @@ export default function LeaderboardPage() {
               return (
                 <div key={p.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
                   style={{
-                    background: isMe ? "rgba(99,102,241,0.1)" : i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent",
+                    background: isMe ? "rgba(99,102,241,0.1)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
                     border: isMe ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
                   }}
                 >
@@ -103,7 +103,7 @@ export default function LeaderboardPage() {
             })}
             {tab === "daily" && daily.map((r, i) => (
               <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}
+                style={{ background: i % 2 === 0 ? "var(--subtle-bg)" : "transparent" }}
               >
                 <span className="w-6 text-center text-sm font-bold" style={{ color: "var(--text3)" }}>
                   {medals[i] ?? `${i + 1}`}
