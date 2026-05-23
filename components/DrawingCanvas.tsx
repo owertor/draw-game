@@ -20,9 +20,10 @@ export default function DrawingCanvas({
   disabled = false,
   canvasId,
 }: DrawingCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const isDrawingRef = useRef(false);
-  const lastPointRef = useRef<Point | null>(null);
+  const canvasRef       = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef    = useRef(false);
+  const lastPointRef    = useRef<Point | null>(null);
+  const lastMidpointRef = useRef<Point | null>(null);
   const [isEmpty, setIsEmpty] = useState(true);
 
   const getCanvasPoint = useCallback(
@@ -51,6 +52,15 @@ export default function DrawingCanvas({
     initCanvas();
   }, [initCanvas]);
 
+  /** Apply pen style once (avoids repeated setter calls inside draw loop). */
+  const applyStyle = useCallback((ctx: CanvasRenderingContext2D) => {
+    ctx.strokeStyle = "#000000";
+    ctx.fillStyle   = "#000000";
+    ctx.lineWidth   = 6;
+    ctx.lineCap     = "round";
+    ctx.lineJoin    = "round";
+  }, []);
+
   const startDrawing = useCallback(
     (point: Point) => {
       if (disabled) return;
@@ -59,16 +69,18 @@ export default function DrawingCanvas({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      isDrawingRef.current = true;
-      lastPointRef.current = point;
+      isDrawingRef.current    = true;
+      lastPointRef.current    = point;
+      lastMidpointRef.current = null;
 
+      // Paint a dot so a tap/click without move is visible
+      applyStyle(ctx);
       ctx.beginPath();
       ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = "#000000";
       ctx.fill();
       setIsEmpty(false);
     },
-    [disabled]
+    [disabled, applyStyle]
   );
 
   const draw = useCallback(
@@ -79,31 +91,49 @@ export default function DrawingCanvas({
       const ctx = canvas.getContext("2d");
       if (!ctx || !lastPointRef.current) return;
 
+      const last = lastPointRef.current;
+      const mid  = {
+        x: (last.x + point.x) / 2,
+        y: (last.y + point.y) / 2,
+      };
+
+      // Draw from the previous midpoint → current midpoint,
+      // using `last` as the quadratic control point.
+      // This guarantees continuous curves with zero gaps.
+      applyStyle(ctx);
       ctx.beginPath();
-      ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y);
-      ctx.quadraticCurveTo(
-        lastPointRef.current.x,
-        lastPointRef.current.y,
-        (lastPointRef.current.x + point.x) / 2,
-        (lastPointRef.current.y + point.y) / 2
+      ctx.moveTo(
+        lastMidpointRef.current ? lastMidpointRef.current.x : last.x,
+        lastMidpointRef.current ? lastMidpointRef.current.y : last.y,
       );
-      ctx.strokeStyle = "#000000";
-      ctx.lineWidth = 6;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+      ctx.quadraticCurveTo(last.x, last.y, mid.x, mid.y);
       ctx.stroke();
 
-      lastPointRef.current = point;
+      lastMidpointRef.current = mid;
+      lastPointRef.current    = point;
     },
-    [disabled]
+    [disabled, applyStyle]
   );
 
   const stopDrawing = useCallback(() => {
     if (!isDrawingRef.current) return;
-    isDrawingRef.current = false;
-    lastPointRef.current = null;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+
+    // Close the final gap from last midpoint to the actual end point
+    if (ctx && lastPointRef.current && lastMidpointRef.current) {
+      applyStyle(ctx);
+      ctx.beginPath();
+      ctx.moveTo(lastMidpointRef.current.x, lastMidpointRef.current.y);
+      ctx.lineTo(lastPointRef.current.x,    lastPointRef.current.y);
+      ctx.stroke();
+    }
+
+    isDrawingRef.current    = false;
+    lastPointRef.current    = null;
+    lastMidpointRef.current = null;
     onStrokeEnd?.();
-  }, [onStrokeEnd]);
+  }, [onStrokeEnd, applyStyle]);
 
   // Mouse events
   const handleMouseDown = useCallback(
