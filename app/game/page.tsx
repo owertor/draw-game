@@ -1,7 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import { Suspense } from "react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -50,6 +49,10 @@ interface RoundResult {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function GamePage() {
+  return <Suspense><GameContent /></Suspense>;
+}
+
+function GameContent() {
   const searchParams  = useSearchParams();
   const isDaily       = searchParams.get("daily") === "true";
   const { user, profile, refreshProfile } = useAuth();
