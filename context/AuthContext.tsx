@@ -9,6 +9,7 @@ interface AuthContextValue {
   session:       Session | null;
   profile:       Profile | null;
   loading:       boolean;
+  autoCreating:  boolean;
   signUp:        (email: string, password: string, nickname: string) => Promise<{ error: string | null }>;
   signIn:        (email: string, password: string) => Promise<{ error: string | null }>;
   signInGoogle:  () => Promise<{ error: string | null }>;
@@ -20,10 +21,11 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user,    setUser]    = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user,         setUser]         = useState<User | null>(null);
+  const [session,      setSession]      = useState<Session | null>(null);
+  const [profile,      setProfile]      = useState<Profile | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [autoCreating, setAutoCreating] = useState(false);
 
   const loadProfile = useCallback(async (uid: string) => {
     const { data } = await supabase
@@ -78,13 +80,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        setAutoCreating(true);
         loadProfile(session.user.id).then(async () => {
-          // Auto-create profile from metadata if still missing
           const { data } = await supabase.from("profiles").select("id").eq("id", session.user.id).single();
-          if (!data) tryAutoCreateProfile(session.user);
+          if (!data) await tryAutoCreateProfile(session.user);
+          setAutoCreating(false);
         });
       } else {
         setProfile(null);
+        setAutoCreating(false);
       }
     });
 
@@ -134,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, session, profile, loading,
+      user, session, profile, loading, autoCreating,
       signUp, signIn, signInGoogle, signOut, refreshProfile, saveProfile,
     }}>
       {children}
