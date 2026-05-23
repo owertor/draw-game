@@ -565,7 +565,7 @@ function GameContent() {
                   <span className="text-base">💡</span>
                   <span className="text-sm" style={{ color: "var(--text2)" }}>
                     Подсказка:{" "}
-                    <span className="font-bold text-white">
+                    <span className="font-bold" style={{ color: "var(--text)" }}>
                       {p2Word.ru[0].toUpperCase()}...
                     </span>
                     <span className="ml-2 text-xs" style={{ color: "var(--text3)" }}>

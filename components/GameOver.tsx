@@ -24,7 +24,7 @@ export default function GameOver({ phase1, phase2, roundTotal, sessionTotal, onN
       {/* Title */}
       <div className="text-center">
         <div className="text-4xl mb-1 scale-in">{emoji}</div>
-        <h2 className="text-2xl font-black text-white">Раунд завершён!</h2>
+        <h2 className="text-2xl font-black" style={{ color: "var(--text)" }}>Раунд завершён!</h2>
         {stars && <p className="text-xl mt-1">{stars}</p>}
       </div>
 
@@ -65,7 +65,7 @@ export default function GameOver({ phase1, phase2, roundTotal, sessionTotal, onN
           <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--text2)" }}>
             Всего
           </p>
-          <p className="text-4xl font-black text-white">{sessionTotal}</p>
+          <p className="text-4xl font-black" style={{ color: "var(--text)" }}>{sessionTotal}</p>
         </div>
       </div>
 
@@ -96,8 +96,8 @@ function PhaseCard({
         background: "rgba(34,197,94,0.08)",
         border: "1px solid rgba(34,197,94,0.28)",
       } : {
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: "var(--item-bg)",
+        border: "1px solid var(--border)",
       }}
     >
       <div className="flex justify-between items-center">
@@ -108,7 +108,7 @@ function PhaseCard({
           >
             {icon} {label}
           </p>
-          <p className="text-white font-bold text-lg leading-tight">{word}</p>
+          <p className="font-bold text-lg leading-tight" style={{ color: "var(--text)" }}>{word}</p>
         </div>
         <div className="text-right ml-3">
           <p
@@ -117,7 +117,7 @@ function PhaseCard({
           >
             +{points}
           </p>
-          <p className="text-xs" style={{ color: success ? "#4ade80" : "var(--text3)" }}>
+          <p className="text-xs" style={{ color: success ? "var(--green)" : "var(--text3)" }}>
             {success ? successText : "Не угадал"}
           </p>
         </div>
