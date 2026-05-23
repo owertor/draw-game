@@ -9,7 +9,7 @@ import AppShell from "@/components/AppShell";
 const AVATARS = ["🎨","🖌️","✏️","🎭","🦊","🐺","🐼","🦁","🐸","👾","🤖","👻","🎃","⚡","🔥","💎","🚀","🌙"];
 
 export default function ProfilePage() {
-  const { user, profile, saveProfile } = useAuth();
+  const { user, profile, saveProfile, signOut } = useAuth();
 
   const [earned,   setEarned]   = useState<string[]>([]);
   const [editing,  setEditing]  = useState(false);
@@ -153,6 +153,19 @@ export default function ProfilePage() {
             })}
           </div>
         </div>
+
+        {/* ── Sign out ── */}
+        <button
+          onClick={signOut}
+          className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+          style={{
+            background: "rgba(248,113,113,0.06)",
+            border: "1px solid rgba(248,113,113,0.18)",
+            color: "var(--red)",
+          }}
+        >
+          ↩ Выйти из аккаунта
+        </button>
 
       </div>
     </AppShell>

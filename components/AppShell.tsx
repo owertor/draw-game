@@ -90,14 +90,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Bottom: sign-out + theme toggle */}
         <div
-          className="p-4 flex items-center justify-between shrink-0"
+          className="p-3 flex items-center gap-2 shrink-0"
           style={{ borderTop: "1px solid var(--border)" }}
         >
           <button
             onClick={signOut}
-            className="text-xs font-semibold transition-opacity hover:opacity-60"
-            style={{ color: "var(--text3)" }}
+            className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+            style={{
+              background: "transparent",
+              border: "1px solid transparent",
+              color: "var(--text2)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(248,113,113,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.color = "var(--red)";
+              (e.currentTarget as HTMLButtonElement).style.border = "1px solid rgba(248,113,113,0.2)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.color = "var(--text2)";
+              (e.currentTarget as HTMLButtonElement).style.border = "1px solid transparent";
+            }}
           >
+            <span>↩</span>
             Выйти
           </button>
           <ThemeToggle variant="inline" />

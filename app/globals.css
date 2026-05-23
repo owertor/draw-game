@@ -68,6 +68,8 @@ body {
   background-image:
     radial-gradient(ellipse 80% 60% at 15% 0%,   rgba(99, 102, 241, 0.10) 0%, transparent 70%),
     radial-gradient(ellipse 60% 40% at 85% 100%,  rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+  /* Keep gradient fixed to the viewport so it doesn't seam on long pages */
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-inter, system-ui, -apple-system, sans-serif);
   min-height: 100vh;
@@ -82,6 +84,7 @@ body {
   background-image:
     radial-gradient(ellipse 80% 60% at 15% 0%,   rgba(99, 102, 241, 0.07) 0%, transparent 70%),
     radial-gradient(ellipse 60% 40% at 85% 100%,  rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+  background-attachment: fixed;
 }
 
 /* ── Utility classes ────────────────────────────────────────────────────────── */
