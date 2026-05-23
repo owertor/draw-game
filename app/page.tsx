@@ -45,9 +45,9 @@ export default function LandingPage() {
       <header
         className="fixed top-0 inset-x-0 z-50 h-16 flex items-center"
         style={{
-          background:  "rgba(7,7,15,0.75)",
+          background:     "var(--navbar-bg)",
           backdropFilter: "blur(20px)",
-          borderBottom: "1px solid var(--border)",
+          borderBottom:   "1px solid var(--border)",
         }}
       >
         <div className="max-w-5xl mx-auto w-full px-6 flex items-center gap-4">
@@ -57,12 +57,7 @@ export default function LandingPage() {
           <ThemeToggle variant="inline" />
           <Link
             href="/auth"
-            className="px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-            style={{
-              background: "var(--accent-dim)",
-              border: "1px solid var(--border-accent)",
-              color: "var(--accent-bright)",
-            }}
+            className="btn-primary px-4 py-2 rounded-xl text-sm font-bold text-white transition-all"
           >
             Войти
           </Link>

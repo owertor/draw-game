@@ -30,6 +30,8 @@
 
   --achievement-done-bg:     rgba(99, 102, 241, 0.10);
   --achievement-done-border: rgba(99, 102, 241, 0.28);
+
+  --navbar-bg: rgba(7, 7, 15, 0.80);   /* landing page top bar */
 }
 
 /* ── Light theme ────────────────────────────────────────────────────────────── */
@@ -60,6 +62,8 @@
 
   --achievement-done-bg:     rgba(99, 102, 241, 0.10);
   --achievement-done-border: rgba(99, 102, 241, 0.30);
+
+  --navbar-bg: rgba(240, 240, 250, 0.88); /* landing page top bar */
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────────── */
