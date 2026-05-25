@@ -6,10 +6,20 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 
+/** Russian plural for days: 1 день / 2 дня / 5 дней */
+function ruDays(n: number): string {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return "день";
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return "дня";
+  return "дней";
+}
+
 const NAV = [
-  { href: "/dashboard",   icon: "🎮", label: "Играть"    },
-  { href: "/leaderboard", icon: "🏆", label: "Лидерборд" },
-  { href: "/profile",     icon: "👤", label: "Профиль"   },
+  { href: "/dashboard",    icon: "🎮", label: "Играть"      },
+  { href: "/daily",        icon: "📅", label: "Дейли"       },
+  { href: "/leaderboard",  icon: "🏆", label: "Лидерборд"   },
+  { href: "/achievements", icon: "🏅", label: "Достижения"  },
+  { href: "/profile",      icon: "👤", label: "Профиль"     },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -87,6 +97,39 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        {/* Streak widget */}
+        {profile && (
+          <Link
+            href="/daily"
+            className="mx-3 mb-2 p-3 rounded-xl flex items-center gap-3 shrink-0 transition-all hover:opacity-80"
+            style={{
+              background: (profile.current_streak ?? 0) > 0 ? "rgba(251,146,60,0.10)" : "var(--item-bg)",
+              border: (profile.current_streak ?? 0) > 0
+                ? "1px solid rgba(251,146,60,0.3)"
+                : "1px solid var(--border)",
+            }}
+          >
+            <span className="text-2xl select-none leading-none">🔥</span>
+            <div className="min-w-0">
+              {(profile.current_streak ?? 0) > 0 ? (
+                <>
+                  <p className="text-sm font-black leading-tight" style={{ color: "var(--text)" }}>
+                    {profile.current_streak} {ruDays(profile.current_streak)} подряд
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text3)" }}>Не теряй стрик!</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-bold leading-tight" style={{ color: "var(--text)" }}>
+                    Начни стрик
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text3)" }}>Сыграй дейли сегодня</p>
+                </>
+              )}
+            </div>
+          </Link>
+        )}
 
         {/* Bottom: sign-out + theme toggle */}
         <div

@@ -158,6 +158,18 @@ function GameContent() {
         else awardAchievement("daily_played");
       }
 
+      // Daily streak: today = unchanged, yesterday = +1, older/none = reset to 1.
+      const today = getTodayDate();
+      const lastPlayed = profile?.last_played_date ?? null;
+      const yest = new Date(today + "T00:00:00Z");
+      yest.setUTCDate(yest.getUTCDate() - 1);
+      const yesterday = yest.toISOString().split("T")[0];
+      let streak = profile?.current_streak ?? 0;
+      if (lastPlayed !== today) {
+        streak = lastPlayed === yesterday ? streak + 1 : 1;
+      }
+      const bestStreak = Math.max(streak, profile?.best_streak ?? 0);
+
       // Update profile stats
       const newBest = Math.max(newTotal, profile?.best_score ?? 0);
       const gamesPlayed = (profile?.games_played ?? 0) + 1;
@@ -165,6 +177,9 @@ function GameContent() {
         total_score: (profile?.total_score ?? 0) + total,
         games_played: gamesPlayed,
         best_score: newBest,
+        current_streak: streak,
+        best_streak: bestStreak,
+        last_played_date: today,
       }).eq("id", user.id);
       if (profRes.error) console.error("[game] profile update failed:", profRes.error.message);
       else await refreshProfile();
@@ -175,6 +190,8 @@ function GameContent() {
       if (gamesPlayed >= 10) awardAchievement("artist_10");
       if (gamesPlayed >= 50) awardAchievement("artist_50");
       if (p1.points >= 150 || p2.points >= 150) awardAchievement("perfect_phase");
+      if (streak >= 3) awardAchievement("streak_3");
+      if (streak >= 7) awardAchievement("streak_7");
     },
     [user, profile, roundNumber, isDaily, awardAchievement, refreshProfile]
   );

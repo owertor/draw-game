@@ -77,17 +77,31 @@ export default function LeaderboardPage() {
 
   const medals = ["🥇", "🥈", "🥉"];
 
+  // Normalise the active tab into a uniform shape for rendering.
+  const rows = (tab === "alltime"
+    ? allTime.map((p) => ({
+        key: p.id, isMe: !!user && p.id === user.id,
+        avatar: p.avatar, name: p.nickname, score: p.best_score,
+        sub: `${p.games_played} игр`,
+      }))
+    : today.map((r) => ({
+        key: r.user_id, isMe: !!user && r.user_id === user.id,
+        avatar: r.avatar, name: r.nickname, score: r.score, sub: null as string | null,
+      })));
+
+  const podiumOrder = [1, 0, 2]; // render 2nd · 1st · 3rd
+
   return (
     <AppShell>
-      <div className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
 
-        <h1 className="text-2xl font-black text-gradient">Лидерборд</h1>
+        <h1 className="text-3xl font-black text-gradient">Лидерборд</h1>
 
         {/* Tabs */}
         <div className="flex rounded-xl p-1 gap-1" style={{ background: "var(--item-bg)" }}>
           {(["alltime", "daily"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
               style={{
                 background: tab === t ? "var(--accent)" : "transparent",
                 color:      tab === t ? "#fff" : "var(--text2)",
@@ -99,64 +113,100 @@ export default function LeaderboardPage() {
         </div>
 
         {loading ? (
-          <div className="glass p-8 text-center" style={{ color: "var(--text2)" }}>Загрузка…</div>
+          <div className="glass p-12 text-center" style={{ color: "var(--text2)" }}>Загрузка…</div>
+        ) : rows.length === 0 ? (
+          <div className="glass p-12 text-center text-sm" style={{ color: "var(--text2)" }}>
+            {tab === "daily" ? "Никто ещё не играл сегодня — будь первым!" : "Пока нет результатов"}
+          </div>
         ) : (
-          <div className="glass p-4 flex flex-col gap-2">
-            {(tab === "alltime" ? allTime : today).length === 0 && (
-              <p className="text-center py-4 text-sm" style={{ color: "var(--text2)" }}>
-                {tab === "daily"
-                  ? "Никто ещё не играл сегодня — будь первым!"
-                  : "Пока нет результатов"}
-              </p>
+          <div className="flex flex-col gap-6">
+
+            {/* Podium for the top 3 (when there are at least 3 players) */}
+            {rows.length >= 3 && (
+              <div className="grid grid-cols-3 gap-3 items-end">
+                {podiumOrder.map((idx) => {
+                  const r = rows[idx];
+                  const first = idx === 0;
+                  return (
+                    <div key={r.key}
+                      className="flex flex-col items-center gap-1.5 rounded-2xl px-2 py-4"
+                      style={{
+                        background: r.isMe ? "rgba(99,102,241,0.12)" : "var(--item-bg)",
+                        border: `1px solid ${first ? "var(--border-accent)" : "var(--border)"}`,
+                        transform: first ? "translateY(-12px)" : "none",
+                        boxShadow: first ? "0 0 24px rgba(99,102,241,0.18)" : "none",
+                      }}
+                    >
+                      <span className={first ? "text-3xl" : "text-2xl"}>{medals[idx]}</span>
+                      <span className={first ? "text-5xl leading-none select-none" : "text-4xl leading-none select-none"}>{r.avatar}</span>
+                      <span className="text-sm font-bold text-center truncate w-full px-1" style={{ color: "var(--text)" }}>
+                        {r.name}{r.isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
+                      </span>
+                      <span className={`${first ? "text-xl" : "text-lg"} font-black tabular-nums`} style={{ color: "var(--yellow)" }}>
+                        {r.score}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
 
-            {/* ── All-time ── */}
-            {tab === "alltime" && allTime.map((p, i) => {
-              const isMe = user && p.id === user.id;
-              return (
-                <div key={p.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-                  style={{
-                    background: isMe ? "rgba(99,102,241,0.1)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
-                    border:     isMe ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
-                  }}
-                >
-                  <span className="w-6 text-center text-sm font-bold" style={{ color: "var(--text3)" }}>
-                    {medals[i] ?? `${i + 1}`}
+            {/* Champion hero card when there are only 1–2 players (a podium would look broken) */}
+            {rows.length > 0 && rows.length < 3 && (
+              <div className="rounded-2xl p-6 flex items-center gap-5"
+                style={{
+                  background: rows[0].isMe ? "rgba(99,102,241,0.12)" : "var(--item-bg)",
+                  border: "1px solid var(--border-accent)",
+                  boxShadow: "0 0 28px rgba(99,102,241,0.16)",
+                }}
+              >
+                <span className="text-6xl leading-none select-none shrink-0">{rows[0].avatar}</span>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-xs uppercase tracking-widest font-bold" style={{ color: "var(--yellow)" }}>🥇 Чемпион</span>
+                  <span className="text-2xl font-black truncate" style={{ color: "var(--text)" }}>
+                    {rows[0].name}{rows[0].isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
                   </span>
-                  <span className="text-xl select-none">{p.avatar}</span>
-                  <span className="flex-1 text-sm font-semibold" style={{ color: "var(--text)" }}>
-                    {p.nickname}{isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
-                  </span>
-                  <span className="text-sm font-black tabular-nums" style={{ color: "var(--yellow)" }}>
-                    {p.best_score}
-                  </span>
+                  {rows[0].sub && <span className="text-xs" style={{ color: "var(--text3)" }}>{rows[0].sub}</span>}
                 </div>
-              );
-            })}
+                <span className="ml-auto text-3xl font-black tabular-nums" style={{ color: "var(--yellow)" }}>{rows[0].score}</span>
+              </div>
+            )}
 
-            {/* ── Today ── */}
-            {tab === "daily" && today.map((r, i) => {
-              const isMe = user && r.user_id === user.id;
+            {/* List of the remaining players (after the highlighted top) */}
+            {(() => {
+              const rest = rows.length >= 3 ? rows.slice(3) : rows.slice(1);
+              const startRank = rows.length >= 3 ? 4 : 2;
+              if (rest.length === 0) return null;
               return (
-                <div key={r.user_id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-                  style={{
-                    background: isMe ? "rgba(99,102,241,0.1)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
-                    border:     isMe ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
-                  }}
-                >
-                  <span className="w-6 text-center text-sm font-bold" style={{ color: "var(--text3)" }}>
-                    {medals[i] ?? `${i + 1}`}
-                  </span>
-                  <span className="text-xl select-none">{r.avatar}</span>
-                  <span className="flex-1 text-sm font-semibold" style={{ color: "var(--text)" }}>
-                    {r.nickname}{isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
-                  </span>
-                  <span className="text-sm font-black tabular-nums" style={{ color: "var(--yellow)" }}>
-                    {r.score}
-                  </span>
+                <div className="glass p-3 flex flex-col gap-1.5">
+                  {rest.map((r, i) => {
+                    const rank = startRank + i;
+                    return (
+                      <div key={r.key} className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all"
+                        style={{
+                          background: r.isMe ? "rgba(99,102,241,0.1)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
+                          border:     r.isMe ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
+                        }}
+                      >
+                        <span className="w-7 text-center text-sm font-bold tabular-nums" style={{ color: "var(--text3)" }}>
+                          {medals[rank - 1] ?? rank}
+                        </span>
+                        <span className="text-2xl leading-none select-none">{r.avatar}</span>
+                        <span className="flex-1 min-w-0 truncate text-sm font-semibold" style={{ color: "var(--text)" }}>
+                          {r.name}{r.isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
+                        </span>
+                        {r.sub && (
+                          <span className="text-xs hidden sm:block" style={{ color: "var(--text3)" }}>{r.sub}</span>
+                        )}
+                        <span className="text-sm font-black tabular-nums w-16 text-right" style={{ color: "var(--yellow)" }}>
+                          {r.score}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               );
-            })}
+            })()}
           </div>
         )}
       </div>

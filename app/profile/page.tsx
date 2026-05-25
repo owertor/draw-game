@@ -43,9 +43,12 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <div className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
 
-        <h1 className="text-2xl font-black" style={{ color: "var(--text)" }}>Профиль</h1>
+        <h1 className="text-3xl font-black" style={{ color: "var(--text)" }}>Профиль</h1>
+
+        <div className="grid lg:grid-cols-2 gap-6 items-start">
+        <div className="flex flex-col gap-6">
 
         {/* ── Profile card ── */}
         <div className="glass p-6 flex flex-col items-center gap-4">
@@ -123,7 +126,9 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+        </div>
 
+        <div className="flex flex-col gap-6">
         {/* ── Achievements ── */}
         <div className="glass p-5 flex flex-col gap-3">
           <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--text3)" }}>
@@ -167,6 +172,8 @@ export default function ProfilePage() {
           ↩ Выйти из аккаунта
         </button>
 
+        </div>
+        </div>
       </div>
     </AppShell>
   );

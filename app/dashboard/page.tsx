@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-10">
+      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-10">
 
         {/* ── Welcome ── */}
         <div>
