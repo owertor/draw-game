@@ -42,3 +42,12 @@ next-env.d.ts
 
 # claude code internal
 .claude/
+
+# ML training artifacts (keep scripts + classes, drop heavy data/venvs/models)
+ml/venv/
+ml/venv_tfjs/
+ml/data/
+ml/data_full/
+ml/saved_model_full/
+ml/*.keras
+ml/results_*.json

@@ -16,8 +16,8 @@
   --violet:        #8b5cf6;
 
   --text:          #f0f0f8;
-  --text2:         rgba(240, 240, 248, 0.50);
-  --text3:         rgba(240, 240, 248, 0.28);
+  --text2:         rgba(240, 240, 248, 0.72);
+  --text3:         rgba(240, 240, 248, 0.45);
 
   --green:         #22c55e;
   --red:           #f87171;
@@ -49,8 +49,8 @@
   --violet:        #7c3aed;
 
   --text:          #0d0d1e;
-  --text2:         rgba(13, 13, 30, 0.55);
-  --text3:         rgba(13, 13, 30, 0.38);
+  --text2:         rgba(13, 13, 30, 0.72);
+  --text3:         rgba(13, 13, 30, 0.52);
 
   --green:         #16a34a;
   --red:           #dc2626;
@@ -210,4 +210,23 @@ body {
 }
 .pulse-glow {
   animation: pulseGlow 1.8s ease-in-out infinite;
+}
+
+/* ── Keyboard focus ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

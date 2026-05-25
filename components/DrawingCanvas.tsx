@@ -7,6 +7,9 @@ interface Point {
   y: number;
 }
 
+// Logical drawing surface size (CSS-independent coordinate space).
+const LOGICAL_SIZE = 400;
+
 interface DrawingCanvasProps {
   onClear?: () => void;
   onStrokeEnd?: () => void;
@@ -29,8 +32,9 @@ export default function DrawingCanvas({
   const getCanvasPoint = useCallback(
     (canvas: HTMLCanvasElement, clientX: number, clientY: number): Point => {
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
+      // Map CSS pixels → logical drawing space (the context is already scaled by DPR).
+      const scaleX = LOGICAL_SIZE / rect.width;
+      const scaleY = LOGICAL_SIZE / rect.height;
       return {
         x: (clientX - rect.left) * scaleX,
         y: (clientY - rect.top) * scaleY,
@@ -42,10 +46,15 @@ export default function DrawingCanvas({
   const initCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // Render at device pixel ratio so strokes stay crisp on HiDPI/retina screens.
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = LOGICAL_SIZE * dpr;
+    canvas.height = LOGICAL_SIZE * dpr;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in logical coordinates
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
   }, []);
 
   useEffect(() => {
@@ -56,7 +65,10 @@ export default function DrawingCanvas({
   const applyStyle = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = "#000000";
     ctx.fillStyle   = "#000000";
-    ctx.lineWidth   = 6;
+    // Thin, comfortable pen. predict() applies a light dilation so the model
+    // still sees ~QuickDraw-thickness strokes. Recognition stays good while
+    // leaving enough challenge that the bot doesn't trivially guess everything.
+    ctx.lineWidth   = 9;
     ctx.lineCap     = "round";
     ctx.lineJoin    = "round";
   }, []);
@@ -76,7 +88,7 @@ export default function DrawingCanvas({
       // Paint a dot so a tap/click without move is visible
       applyStyle(ctx);
       ctx.beginPath();
-      ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, 4.5, 0, Math.PI * 2);
       ctx.fill();
       setIsEmpty(false);
     },
@@ -183,7 +195,7 @@ export default function DrawingCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
     setIsEmpty(true);
     onClear?.();
   }, [onClear]);

@@ -27,19 +27,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading,      setLoading]      = useState(true);
   const [autoCreating, setAutoCreating] = useState(false);
 
-  const loadProfile = useCallback(async (uid: string) => {
+  const loadProfile = useCallback(async (uid: string): Promise<Profile | null> => {
     const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", uid)
-      .single();
+      .maybeSingle();
     setProfile(data ?? null);
+    return data ?? null;
   }, []);
 
   /** Try to auto-create profile from auth metadata (Google name or email signup data). */
   const tryAutoCreateProfile = useCallback(async (user: User) => {
     // Already has profile?
-    const { data: existing } = await supabase.from("profiles").select("id").eq("id", user.id).single();
+    const { data: existing } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
     if (existing) return;
 
     // Try to get a nickname from metadata
@@ -63,8 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (suffix > 99) return; // give up, show modal
     }
 
-    const avatar = meta.avatar_url ? "🎨" : "🎨"; // default
-    await supabase.from("profiles").insert({ id: user.id, nickname, avatar });
+    const { error } = await supabase.from("profiles").insert({ id: user.id, nickname, avatar: "🎨" });
+    if (error) { console.error("[auth] auto-create profile failed:", error.message); return; }
     await loadProfile(user.id);
   }, [loadProfile]);
 
@@ -81,9 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         setAutoCreating(true);
-        loadProfile(session.user.id).then(async () => {
-          const { data } = await supabase.from("profiles").select("id").eq("id", session.user.id).single();
-          if (!data) await tryAutoCreateProfile(session.user);
+        loadProfile(session.user.id).then(async (existing) => {
+          if (!existing) await tryAutoCreateProfile(session.user);
           setAutoCreating(false);
         });
       } else {

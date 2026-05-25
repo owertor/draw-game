@@ -4,11 +4,11 @@
 
 ## What this is
 
-A browser game built with Next.js 16 + TF.js + Canvas API. No backend, no paid APIs — fully static, deployable to Vercel free tier.
+A browser game built with Next.js 16 + Canvas API. Drawing recognition runs on a server-side vision model (Groq Llama-4-Scout via `/api/guess`); accounts, scores, leaderboard and achievements are backed by Supabase. Deployable to Vercel.
 
 **Game loop (one round = two phases):**
-- **Phase 1** — player draws a word on canvas → TF.js k-NN model tries to guess it in real-time. Points = `timeLeft × 5` (max 100, 20s timer).
-- **Phase 2** — bot replays a QuickDraw stroke sequence on canvas → player types a fuzzy-matched guess. Points = 100 (guessed before bot finished) / 50 (guessed in the 10s window after).
+- **Phase 1** — player draws a word on canvas → the vision model tries to guess it. Points = `timeLeft × 5` (max 150, 30s timer).
+- **Phase 2** — bot replays a QuickDraw stroke sequence on canvas → player types a fuzzy-matched guess. Points = `timeLeft × 5` (max 150, 30s timer; guess early for more).
 
 ## Stack
 
@@ -17,10 +17,11 @@ A browser game built with Next.js 16 + TF.js + Canvas API. No backend, no paid A
 | Framework | Next.js 16.2.6, App Router | installed by create-next-app |
 | Language | TypeScript | |
 | Styles | Tailwind CSS v4 (`@import "tailwindcss"`) | |
-| ML | `@tensorflow/tfjs` | in-browser k-NN, no model URL needed |
-| Fuzzy match | `fuse.js` | player's text answers |
+| ML | Server-side vision (Groq Llama-4-Scout) | called from `/api/guess`; key in `GROQ_API_KEY` |
+| Backend | Supabase (auth + Postgres) | profiles, scores, daily, achievements |
+| Fuzzy match | custom synonym map + server-side Levenshtein | player answers / model output |
 | Sound | ZzFX inline (`lib/sounds.ts`) | no external dep |
-| Storage | localStorage | best score, session stats |
+| Storage | localStorage + Supabase | local best/session; cloud stats when logged in |
 | Dataset | QuickDraw NDJSON (pre-downloaded) | `public/drawings/*.json` |
 
 ## Key files
@@ -66,13 +67,13 @@ Game is at `http://localhost:3000/game`.
 
 ## Architecture: the ML model
 
-No pre-trained model URL was found. Instead:
+Recognition is server-side, not local TF.js (an earlier k-NN approach was replaced):
 
-1. `initModel()` fetches all 30 `public/drawings/*.json` files, rasterizes 30 drawings per word to 28×28 canvas (black bg, white strokes), flattens to Float32Array.
-2. Builds a gallery Tensor2D `[N, 784]` (N = words × 30 = 900 rows), L2-normalises rows.
-3. `predict(canvas)` crops to ink bounding box → scales to 28×28 → inverts colours (dark→1) → L2-normalises → matMul with gallery → gets cosine similarities → mean-of-top-5 per word → min-max normalises to `[0, 1]` → returns top-5 predictions sorted by confidence.
+1. `predict(canvas)` in `lib/quickdraw-model.ts` downsizes the canvas to a small PNG and POSTs base64 to `/api/guess`.
+2. `app/api/guess/route.ts` sends the image + the word list to the Groq vision model, parses the JSON array it returns, and fuzzy-matches each raw word back to the canonical list (`matchToWordList`: exact → ≥4-char substring → Levenshtein ≤ 1–2).
+3. The route is rate-limited (30 req/min/IP) and caps the payload size; `GROQ_API_KEY` may be a comma-separated list of keys (rotated on 429).
 
-Gallery stays in memory after first load. ModelLoader shows a progress bar during initModel.
+`predict()` returns top-3 with **display-only** confidence values (100/70/40%) — these are rank placeholders, not real probabilities. `initModel()` is now a no-op kept for the ModelLoader contract.
 
 ## Architecture: stale-closure trap
 
@@ -121,13 +122,12 @@ Defined in `app/globals.css`:
 
 | Situation | Points |
 |---|---|
-| Phase 1: bot guessed | `timeLeft × 5` (max 100) |
+| Phase 1: bot guessed | `timeLeft × 5` (max 150, 30s timer) |
 | Phase 1: time ran out | 0 |
-| Phase 2: guessed before bot finished drawing | 100 |
-| Phase 2: guessed in 10s window after bot finished | 50 |
+| Phase 2: player guessed | `timeLeft × 5` (max 150, 30s timer — guess early for more) |
 | Phase 2: time ran out | 0 |
 
-Best score is persisted in localStorage via `lib/storage.ts`.
+Best score is persisted in localStorage via `lib/storage.ts`, and—when logged in—mirrored to Supabase `profiles`/`game_results`. Score writes are client-trusted (RLS only checks ownership), so the leaderboard is not cheat-proof; treat it as cosmetic.
 
 ## Things that were tried and didn't work
 
@@ -137,4 +137,4 @@ Best score is persisted in localStorage via `lib/storage.ts`.
 
 ## Deployment
 
-Push to GitHub → connect to Vercel → deploy. No env vars needed. `public/drawings/` is committed, so prepare-data does not need to run on Vercel.
+Push to GitHub → connect to Vercel → deploy. Required env vars: `GROQ_API_KEY` (one or comma-separated), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Run `supabase-schema.sql` in the Supabase SQL editor once. `public/drawings/` is committed, so prepare-data does not need to run on Vercel.

@@ -83,6 +83,7 @@ function GameContent() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [roundNumber, setRoundNumber] = useState(1);
   const [sessionScore, setSessionScore] = useState(0);
+  const sessionScoreRef = useRef(0);
   const [bestScore, setBestScore] = useState(0);
   const [roundScore, setRoundScore] = useState(0);
 
@@ -131,6 +132,53 @@ function GameContent() {
     }
   }, []);
 
+  /** Side-effecting Supabase persistence — kept out of the state updater. */
+  const persistRound = useCallback(
+    async ({ p1, p2, total, newTotal }: {
+      p1: RoundResult; p2: RoundResult; total: number; newTotal: number;
+    }) => {
+      if (!user) return;
+
+      const gameRes = await supabase
+        .from("game_results")
+        .insert({ user_id: user.id, score: newTotal, rounds_played: roundNumber });
+      if (gameRes.error) console.error("[game] save result failed:", gameRes.error.message);
+
+      // Daily challenge: keep the best score for today (one row per user/day).
+      if (isDaily) {
+        const today = getTodayDate();
+        const { data: prev } = await supabase
+          .from("daily_results")
+          .select("score").eq("user_id", user.id).eq("date", today).maybeSingle();
+        const bestDaily = Math.max(total, prev?.score ?? 0);
+        const dailyRes = await supabase
+          .from("daily_results")
+          .upsert({ user_id: user.id, date: today, score: bestDaily }, { onConflict: "user_id,date" });
+        if (dailyRes.error) console.error("[game] daily save failed:", dailyRes.error.message);
+        else awardAchievement("daily_played");
+      }
+
+      // Update profile stats
+      const newBest = Math.max(newTotal, profile?.best_score ?? 0);
+      const gamesPlayed = (profile?.games_played ?? 0) + 1;
+      const profRes = await supabase.from("profiles").update({
+        total_score: (profile?.total_score ?? 0) + total,
+        games_played: gamesPlayed,
+        best_score: newBest,
+      }).eq("id", user.id);
+      if (profRes.error) console.error("[game] profile update failed:", profRes.error.message);
+      else await refreshProfile();
+
+      // Achievements
+      if (newTotal >= 500) awardAchievement("score_500");
+      if (newTotal >= 1000) awardAchievement("score_1000");
+      if (gamesPlayed >= 10) awardAchievement("artist_10");
+      if (gamesPlayed >= 50) awardAchievement("artist_50");
+      if (p1.points >= 150 || p2.points >= 150) awardAchievement("perfect_phase");
+    },
+    [user, profile, roundNumber, isDaily, awardAchievement, refreshProfile]
+  );
+
   // ── End round ─────────────────────────────────────────────────────────────
   const endRound = useCallback(
     (p1: RoundResult, p2: RoundResult) => {
@@ -140,49 +188,22 @@ function GameContent() {
       setP1Result(p1);
       setP2Result(p2);
       setRoundScore(total);
-      setSessionScore((prev) => {
-        const newTotal = prev + total;
-        saveGameResult(newTotal);
 
-        // Save to Supabase when logged in
-        if (user) {
-          supabase.from("game_results").insert({ user_id: user.id, score: newTotal, rounds_played: roundNumber });
+      // Compute the new session total via a ref so persistence runs exactly once
+      // (a state-updater body would re-run under React StrictMode → double writes).
+      const newTotal = sessionScoreRef.current + total;
+      sessionScoreRef.current = newTotal;
+      setSessionScore(newTotal);
+      saveGameResult(newTotal);
 
-          // Daily challenge result
-          if (isDaily) {
-            supabase.from("daily_results")
-              .insert({ user_id: user.id, date: getTodayDate(), score: newTotal })
-              .then(() => awardAchievement("daily_played"));
-          }
+      // Persist to Supabase when logged in
+      if (user) void persistRound({ p1, p2, total, newTotal });
 
-          // Update profile stats
-          const newBest = Math.max(newTotal, profile?.best_score ?? 0);
-          supabase.from("profiles").update({
-            total_score: (profile?.total_score ?? 0) + total,
-            games_played: (profile?.games_played ?? 0) + 1,
-            best_score: newBest,
-          }).eq("id", user.id).then(() => refreshProfile());
-
-          // Score achievements
-          if (newTotal >= 500) awardAchievement("score_500");
-          if (newTotal >= 1000) awardAchievement("score_1000");
-
-          // Games played achievements
-          const gamesPlayed = (profile?.games_played ?? 0) + 1;
-          if (gamesPlayed >= 10) awardAchievement("artist_10");
-          if (gamesPlayed >= 50) awardAchievement("artist_50");
-
-          // Perfect phase (max points in a phase = 150)
-          if (p1.points >= 150 || p2.points >= 150) awardAchievement("perfect_phase");
-        }
-
-        return newTotal;
-      });
       setBestScore(getBestScore());
       setPhase("round_over");
       phaseRef.current = "round_over";
     },
-    [clearTimer, user, profile, roundNumber, isDaily, awardAchievement, refreshProfile]
+    [clearTimer, user, persistRound]
   );
 
   // ── Phase 2 end ───────────────────────────────────────────────────────────
@@ -232,16 +253,18 @@ function GameContent() {
 
   const handleStrokeEnd = useCallback(() => {
     if (predictThrottleRef.current) return;
+    // Local inference is ~tens of ms, so we can recognise almost in real time.
+    // (Was 1500ms only to rate-limit the old Groq API.)
     predictThrottleRef.current = setTimeout(() => {
       predictThrottleRef.current = null;
       runPredict();
-    }, 1500);
+    }, 500);
   }, [runPredict]);
 
   // ── Start Phase 1 ─────────────────────────────────────────────────────────
   const startPhase1 = useCallback(() => {
     Sounds.start();
-    const word = getRandomWord();
+    const word = isDaily ? getDailyWord() : getRandomWord();
     p1SuccessRef.current = false;
     p1WordRef.current = word;
     setP1Word(word);
@@ -267,7 +290,7 @@ function GameContent() {
         }
       }
     }, 1000);
-  }, []);
+  }, [isDaily]);
 
   // ── Start Phase 2 ─────────────────────────────────────────────────────────
   const startPhase2 = useCallback(async () => {
