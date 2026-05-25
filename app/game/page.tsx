@@ -238,6 +238,27 @@ function GameContent() {
     [clearTimer, endRound]
   );
 
+  // ── Daily challenge: single round, phase 1 only (no phase 2, no replay) ─────
+  const endDailyRound = useCallback(
+    (p1: RoundResult) => {
+      clearTimer();
+      const total = p1.points;
+      if (total === 0) Sounds.fail();
+      setP1Result(p1);
+      setP2Result(null);
+      setRoundScore(total);
+      const newTotal = sessionScoreRef.current + total;
+      sessionScoreRef.current = newTotal;
+      setSessionScore(newTotal);
+      saveGameResult(newTotal);
+      if (user) void persistRound({ p1, p2: { word: "", success: false, points: 0 }, total, newTotal });
+      setBestScore(getBestScore());
+      setPhase("round_over");
+      phaseRef.current = "round_over";
+    },
+    [clearTimer, user, persistRound]
+  );
+
   // ── Phase 1: realtime prediction ──────────────────────────────────────────
   const runPredict = useCallback(async () => {
     if (!modelReadyRef.current || p1SuccessRef.current) return;
@@ -263,10 +284,10 @@ function GameContent() {
       // Achievements
       awardAchievement("first_guess");
       if (timeBonus > 20) awardAchievement("lightning");
-      // Start phase 2 after brief delay
-      setTimeout(() => startPhase2(), 1500);
+      // Daily = single round (ends here); classic continues to phase 2
+      setTimeout(() => (isDaily ? endDailyRound(result) : startPhase2()), 1500);
     }
-  }, [p1Word, p1TimeLeft, clearTimer]);
+  }, [p1Word, p1TimeLeft, clearTimer, isDaily, endDailyRound]);
 
   const handleStrokeEnd = useCallback(() => {
     if (predictThrottleRef.current) return;
@@ -303,7 +324,7 @@ function GameContent() {
           const result: RoundResult = { word: word.ru, success: false, points: 0 };
           p1ResultRef.current = result;
           setP1Result(result);
-          setTimeout(() => startPhase2(), 1200);
+          setTimeout(() => (isDaily ? endDailyRound(result) : startPhase2()), 1200);
         }
       }
     }, 1000);
@@ -634,8 +655,8 @@ function GameContent() {
             </div>
           )}
 
-          {/* ── ROUND OVER ─────────────────────────────────────────────────── */}
-          {phase === "round_over" && p1Result && p2Result && (
+          {/* ── ROUND OVER: classic (two phases, next round) ───────────────── */}
+          {phase === "round_over" && !isDaily && p1Result && p2Result && (
             <div className="phase-enter glass p-5">
               <GameOver
                 phase1={p1Result}
@@ -644,6 +665,36 @@ function GameContent() {
                 sessionTotal={sessionScore}
                 onNext={handleNextRound}
               />
+            </div>
+          )}
+
+          {/* ── ROUND OVER: daily (single attempt, no replay) ──────────────── */}
+          {phase === "round_over" && isDaily && p1Result && (
+            <div className="phase-enter glass p-6 flex flex-col items-center gap-5 text-center">
+              <span className="text-5xl select-none">{p1Result.success ? "🎉" : "😔"}</span>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--text3)" }}>
+                  Челлендж дня
+                </p>
+                <p className="text-2xl font-black" style={{ color: "var(--text)" }}>
+                  {p1Result.success ? "Бот угадал!" : "Время вышло"}
+                </p>
+              </div>
+              <p className="text-5xl font-black tabular-nums" style={{ color: "var(--yellow)" }}>
+                +{p1Result.points}
+              </p>
+              <p className="text-sm" style={{ color: "var(--text2)" }}>
+                Одна попытка в день — возвращайся завтра за новым словом
+              </p>
+              <div className="flex gap-3 w-full">
+                <Link href="/daily" className="btn-primary flex-1 py-3 rounded-xl font-bold text-white text-center">
+                  Мой результат
+                </Link>
+                <Link href="/dashboard" className="flex-1 py-3 rounded-xl font-bold text-center"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text2)" }}>
+                  На главную
+                </Link>
+              </div>
             </div>
           )}
 
