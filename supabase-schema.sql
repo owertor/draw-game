@@ -82,3 +82,40 @@ drop policy if exists "achievements_select" on public.user_achievements;
 create policy "achievements_select" on public.user_achievements for select using (true);
 drop policy if exists "achievements_insert" on public.user_achievements;
 create policy "achievements_insert" on public.user_achievements for insert with check (auth.uid() = user_id);
+
+-- ── Private rooms (async "challenge a friend") ──────────────────────────────
+create table if not exists public.rooms (
+  id         uuid primary key default gen_random_uuid(),
+  code       text unique not null,
+  words      text[] not null,                       -- the shared word seed (en)
+  creator_id uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.room_results (
+  id         uuid primary key default gen_random_uuid(),
+  room_id    uuid references public.rooms(id) on delete cascade,
+  user_id    uuid references auth.users(id) on delete cascade,
+  nickname   text not null,
+  avatar     text default '🎨',
+  score      integer not null check (score >= 0 and score <= 1000000),
+  created_at timestamptz default now(),
+  unique(room_id, user_id)
+);
+
+alter table public.rooms        enable row level security;
+alter table public.room_results enable row level security;
+
+-- Rooms: anyone can read (to join by code), authed users create their own
+drop policy if exists "rooms_select" on public.rooms;
+create policy "rooms_select" on public.rooms for select using (true);
+drop policy if exists "rooms_insert" on public.rooms;
+create policy "rooms_insert" on public.rooms for insert with check (auth.uid() = creator_id);
+
+-- Room results: public read (to compare), owner insert/update
+drop policy if exists "room_results_select" on public.room_results;
+create policy "room_results_select" on public.room_results for select using (true);
+drop policy if exists "room_results_insert" on public.room_results;
+create policy "room_results_insert" on public.room_results for insert with check (auth.uid() = user_id);
+drop policy if exists "room_results_update" on public.room_results;
+create policy "room_results_update" on public.room_results for update using (auth.uid() = user_id);

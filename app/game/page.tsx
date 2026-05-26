@@ -24,6 +24,7 @@ import { supabase } from "@/lib/supabase";
 import { getAchievement, type Achievement } from "@/lib/achievements";
 import { getDailyWord, getTodayDate } from "@/lib/daily";
 import { shareResult } from "@/lib/share-card";
+import { getRoom, submitRoomResult } from "@/lib/rooms";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 /** Russian plural form: 1 буква / 2 буквы / 5 букв */
@@ -64,7 +65,22 @@ export default function GamePage() {
 function GameContent() {
   const searchParams  = useSearchParams();
   const isDaily       = searchParams.get("daily") === "true";
+  const roomCode      = searchParams.get("room");
+  const isRoom        = !!roomCode;
   const { user, profile, refreshProfile } = useAuth();
+
+  // Room mode: a fixed shared list of words, played phase-1 only, score summed.
+  const roomWordsRef = useRef<string[]>([]);
+  const roomIdRef    = useRef<string | null>(null);
+  const roomIdxRef   = useRef(0);
+  const roomScoreRef = useRef(0);
+  const [roomReady, setRoomReady] = useState(!isRoom);
+  useEffect(() => {
+    if (!isRoom || !roomCode) return;
+    getRoom(roomCode).then((r) => {
+      if (r) { roomWordsRef.current = r.words; roomIdRef.current = r.id; setRoomReady(true); }
+    });
+  }, [isRoom, roomCode]);
 
   const [modelReady, setModelReady] = useState(false);
   const modelReadyRef = useRef(false);
@@ -278,6 +294,42 @@ function GameContent() {
     [clearTimer, user, persistRound]
   );
 
+  // ── Room mode: submit the summed score after the last word ──────────────────
+  const finishRoom = useCallback(async () => {
+    clearTimer();
+    const total = roomScoreRef.current;
+    sessionScoreRef.current = total;
+    setSessionScore(total);
+    setRoundScore(0);
+    saveGameResult(total);
+    if (user && roomIdRef.current) {
+      const res = await submitRoomResult(
+        roomIdRef.current, user.id, profile?.nickname ?? "Игрок", profile?.avatar ?? "🎨", total
+      );
+      if (res.error) console.error("[room] submit failed:", res.error.message);
+    }
+    setBestScore(getBestScore());
+    setPhase("round_over");
+    phaseRef.current = "round_over";
+  }, [clearTimer, user, profile]);
+
+  // ── Room mode: end one word, advance to the next or finish ──────────────────
+  const endRoomRound = useCallback((p1: RoundResult) => {
+    clearTimer();
+    roomScoreRef.current += p1.points;
+    setP1Result(p1);
+    setRoundScore(p1.points);
+    setSessionScore(roomScoreRef.current);
+    sessionScoreRef.current = roomScoreRef.current;
+    roomIdxRef.current += 1;
+    if (roomIdxRef.current < roomWordsRef.current.length) {
+      setTimeout(() => startPhase1(), 1200);
+    } else {
+      setTimeout(() => finishRoom(), 1200);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clearTimer, finishRoom]);
+
   // ── Phase 1: realtime prediction ──────────────────────────────────────────
   const runPredict = useCallback(async () => {
     if (!modelReadyRef.current || p1SuccessRef.current) return;
@@ -303,10 +355,10 @@ function GameContent() {
       // Achievements
       awardAchievement("first_guess");
       if (timeBonus > 20) awardAchievement("lightning");
-      // Daily = single round (ends here); classic continues to phase 2
-      setTimeout(() => (isDaily ? endDailyRound(result) : startPhase2()), 1500);
+      // Room/daily end here (phase 1 only); classic continues to phase 2
+      setTimeout(() => (isRoom ? endRoomRound(result) : isDaily ? endDailyRound(result) : startPhase2()), 1500);
     }
-  }, [p1Word, p1TimeLeft, clearTimer, isDaily, endDailyRound]);
+  }, [p1Word, p1TimeLeft, clearTimer, isDaily, endDailyRound, isRoom, endRoomRound]);
 
   const handleStrokeEnd = useCallback(() => {
     if (predictThrottleRef.current) return;
@@ -321,8 +373,11 @@ function GameContent() {
   // ── Start Phase 1 ─────────────────────────────────────────────────────────
   const startPhase1 = useCallback(() => {
     Sounds.start();
-    const word = isDaily ? getDailyWord() : getRandomWordFromCategory(selectedCatRef.current);
-    const secs = isDaily ? PHASE1_TIME : (DIFFICULTY[selectedDiffRef.current]?.secs ?? PHASE1_TIME);
+    const word = isRoom
+      ? (getWordByEn(roomWordsRef.current[roomIdxRef.current]) ?? getRandomWordFromCategory("general"))
+      : isDaily ? getDailyWord() : getRandomWordFromCategory(selectedCatRef.current);
+    const secs = (isRoom || isDaily) ? PHASE1_TIME : (DIFFICULTY[selectedDiffRef.current]?.secs ?? PHASE1_TIME);
+    if (isRoom) setRoundNumber(roomIdxRef.current + 1);
     p1SuccessRef.current = false;
     p1WordRef.current = word;
     setP1Word(word);
@@ -345,11 +400,12 @@ function GameContent() {
           const result: RoundResult = { word: word.ru, success: false, points: 0 };
           p1ResultRef.current = result;
           setP1Result(result);
-          setTimeout(() => (isDaily ? endDailyRound(result) : startPhase2()), 1200);
+          setTimeout(() => (isRoom ? endRoomRound(result) : isDaily ? endDailyRound(result) : startPhase2()), 1200);
         }
       }
     }, 1000);
-  }, [isDaily]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDaily, isRoom, endRoomRound]);
 
   // ── Start Phase 2 ─────────────────────────────────────────────────────────
   const startPhase2 = useCallback(async () => {
@@ -492,7 +548,28 @@ function GameContent() {
             </div>
           )}
 
-          {phase === "idle" && !isDaily && (
+          {phase === "idle" && isRoom && (
+            <div className="phase-enter glass p-8 flex flex-col items-center gap-6">
+              <div className="text-5xl float select-none">🎮</div>
+              <div className="text-center">
+                <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--text3)" }}>
+                  Комната {roomCode}
+                </p>
+                <p className="font-medium" style={{ color: "var(--text2)" }}>
+                  Одни и те же слова для всех — кто наберёт больше
+                </p>
+              </div>
+              <button
+                onClick={startPhase1}
+                disabled={!modelReady || !roomReady}
+                className="btn-primary w-full py-4 px-6 rounded-2xl font-bold text-lg text-white"
+              >
+                {!roomReady ? "Загрузка комнаты…" : !modelReady ? "Загрузка…" : "Начать!"}
+              </button>
+            </div>
+          )}
+
+          {phase === "idle" && !isDaily && !isRoom && (
             <div className="phase-enter glass p-6 flex flex-col gap-5">
               <div className="text-center">
                 <div className="text-4xl float select-none mb-1">🎨</div>
@@ -743,8 +820,26 @@ function GameContent() {
             </div>
           )}
 
+          {/* ── ROUND OVER: room (summed score over the shared words) ──────── */}
+          {phase === "round_over" && isRoom && (
+            <div className="phase-enter glass p-6 flex flex-col items-center gap-5 text-center">
+              <span className="text-5xl select-none">🎮</span>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-1" style={{ color: "var(--text3)" }}>
+                  Комната {roomCode}
+                </p>
+                <p className="text-2xl font-black" style={{ color: "var(--text)" }}>Готово!</p>
+              </div>
+              <p className="text-5xl font-black tabular-nums" style={{ color: "var(--yellow)" }}>{sessionScore}</p>
+              <p className="text-sm" style={{ color: "var(--text2)" }}>Сравни счёт с друзьями в комнате</p>
+              <Link href={`/rooms?code=${roomCode}`} className="btn-primary w-full py-3 rounded-xl font-bold text-white text-center">
+                К результатам комнаты →
+              </Link>
+            </div>
+          )}
+
           {/* ── ROUND OVER: classic (two phases, next round) ───────────────── */}
-          {phase === "round_over" && !isDaily && p1Result && p2Result && (
+          {phase === "round_over" && !isDaily && !isRoom && p1Result && p2Result && (
             <div className="phase-enter glass p-5">
               <GameOver
                 phase1={p1Result}

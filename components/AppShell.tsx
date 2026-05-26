@@ -17,6 +17,7 @@ function ruDays(n: number): string {
 const NAV = [
   { href: "/dashboard",    icon: "🎮", label: "Играть"      },
   { href: "/daily",        icon: "📅", label: "Дейли"       },
+  { href: "/rooms",        icon: "👥", label: "Комнаты"     },
   { href: "/leaderboard",  icon: "🏆", label: "Лидерборд"   },
   { href: "/achievements", icon: "🏅", label: "Достижения"  },
   { href: "/profile",      icon: "👤", label: "Профиль"     },
