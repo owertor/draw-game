@@ -1,5 +1,8 @@
 "use client";
 
+import { shareResult } from "@/lib/share-card";
+import { getBestScore } from "@/lib/storage";
+
 interface PhaseResult {
   word: string;
   success: boolean;
@@ -69,12 +72,27 @@ export default function GameOver({ phase1, phase2, roundTotal, sessionTotal, onN
         </div>
       </div>
 
-      <button
-        onClick={onNext}
-        className="btn-primary w-full py-4 rounded-2xl font-bold text-lg text-white"
-      >
-        Следующий раунд →
-      </button>
+      <div className="w-full flex flex-col gap-2.5">
+        <button
+          onClick={onNext}
+          className="btn-primary w-full py-4 rounded-2xl font-bold text-lg text-white"
+        >
+          Следующий раунд →
+        </button>
+        <button
+          onClick={() =>
+            shareResult(
+              { title: "Мой результат", score: sessionTotal, scoreLabel: "очков за сессию",
+                subtitle: `🏆 Рекорд: ${getBestScore()}` },
+              `Я набрал ${sessionTotal} очков в Draw & Guess! Сможешь побить?`
+            )
+          }
+          className="w-full py-3 rounded-2xl font-semibold transition-all hover:opacity-80"
+          style={{ background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text2)" }}
+        >
+          📤 Поделиться результатом
+        </button>
+      </div>
     </div>
   );
 }

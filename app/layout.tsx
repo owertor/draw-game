@@ -11,8 +11,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Draw & Guess",
-  description: "Рисуй и угадывай — игра с ботом на основе QuickDraw",
+  metadataBase: new URL("https://draw-game-tan.vercel.app"),
+  title: "Draw & Guess — рисуй, бот угадывает",
+  description:
+    "Рисуй слово — нейросеть угадывает прямо в браузере. Бот рисует — угадываешь ты. Ежедневный челлендж, лидерборды, достижения.",
+  openGraph: {
+    title: "Draw & Guess",
+    description: "Рисуй — бот угадывает. Бот рисует — угадываешь ты.",
+    type: "website",
+    locale: "ru_RU",
+    siteName: "Draw & Guess",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Draw & Guess",
+    description: "Рисуй — бот угадывает. Бот рисует — угадываешь ты.",
+  },
 };
 
 export const viewport: Viewport = {

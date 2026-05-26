@@ -22,6 +22,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { getAchievement, type Achievement } from "@/lib/achievements";
 import { getDailyWord, getTodayDate } from "@/lib/daily";
+import { shareResult } from "@/lib/share-card";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 /** Russian plural form: 1 буква / 2 буквы / 5 букв */
@@ -686,6 +687,19 @@ function GameContent() {
               <p className="text-sm" style={{ color: "var(--text2)" }}>
                 Одна попытка в день — возвращайся завтра за новым словом
               </p>
+              <button
+                onClick={() =>
+                  shareResult(
+                    { title: "Челлендж дня", score: p1Result.points, scoreLabel: "очков",
+                      subtitle: `Слово дня: «${p1Result.word}»` },
+                    `Челлендж дня в Draw & Guess: ${p1Result.points} очков! Сможешь лучше?`
+                  )
+                }
+                className="w-full py-3 rounded-xl font-semibold transition-all hover:opacity-80"
+                style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.28)", color: "var(--yellow)" }}
+              >
+                📤 Поделиться результатом
+              </button>
               <div className="flex gap-3 w-full">
                 <Link href="/daily" className="btn-primary flex-1 py-3 rounded-xl font-bold text-white text-center">
                   Мой результат
