@@ -14,7 +14,8 @@ import GameOver from "@/components/GameOver";
 import AchievementToast from "@/components/AchievementToast";
 import { predict, type Prediction } from "@/lib/quickdraw-model";
 import { checkAnswer } from "@/lib/fuzzy-match";
-import { WORD_LIST, getRandomWord, getWordByEn, type WordEntry } from "@/lib/word-list";
+import { WORD_LIST, getWordByEn, type WordEntry } from "@/lib/word-list";
+import { CATEGORIES, getCategoryWords, getRandomWordFromCategory } from "@/lib/categories";
 import { getRandomDrawing, type QuickDrawDrawing } from "@/lib/drawings-loader";
 import { getBestScore, saveGameResult } from "@/lib/storage";
 import { Sounds } from "@/lib/sounds";
@@ -35,10 +36,17 @@ function ruLetters(n: number): string {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const PHASE1_TIME = 30; // seconds: player draws, bot guesses
-const PHASE2_TIME = 30; // seconds: bot draws, player guesses (timer starts immediately)
-const POINTS_PER_SECOND = 5; // points per remaining second (both phases, max 150)
+const PHASE1_TIME = 30; // default seconds (daily / medium)
+const PHASE2_TIME = 30;
+const POINTS_PER_SECOND = 5; // points per remaining second
 const BOT_DRAW_DURATION_MS = 8000; // how long the bot takes to draw (~8s)
+
+// Difficulty changes the per-phase timer (shorter = harder, fewer points).
+const DIFFICULTY: Record<string, { label: string; emoji: string; secs: number }> = {
+  easy:   { label: "Лёгкий",  emoji: "🟢", secs: 45 },
+  medium: { label: "Средний", emoji: "🟡", secs: 30 },
+  hard:   { label: "Хардкор", emoji: "🔴", secs: 18 },
+};
 
 type Phase = "idle" | "player_drawing" | "bot_drawing" | "round_over";
 
@@ -80,9 +88,19 @@ function GameContent() {
     if (a) setToastAchievement(a);
   }, [user]);
 
+  // Category + difficulty selection (classic mode)
+  const [selectedCat, setSelectedCat] = useState(searchParams.get("cat") ?? "general");
+  const [selectedDiff, setSelectedDiff] = useState(searchParams.get("diff") ?? "medium");
+  const selectedCatRef = useRef(selectedCat);
+  const selectedDiffRef = useRef(selectedDiff);
+  const pickCat = (id: string) => { setSelectedCat(id); selectedCatRef.current = id; };
+  const pickDiff = (id: string) => { setSelectedDiff(id); selectedDiffRef.current = id; };
+
   // Game state
   const [phase, setPhase] = useState<Phase>("idle");
   const [roundNumber, setRoundNumber] = useState(1);
+  const [p1Max, setP1Max] = useState(PHASE1_TIME);
+  const [p2Max, setP2Max] = useState(PHASE2_TIME);
   const [sessionScore, setSessionScore] = useState(0);
   const sessionScoreRef = useRef(0);
   const [bestScore, setBestScore] = useState(0);
@@ -303,18 +321,20 @@ function GameContent() {
   // ── Start Phase 1 ─────────────────────────────────────────────────────────
   const startPhase1 = useCallback(() => {
     Sounds.start();
-    const word = isDaily ? getDailyWord() : getRandomWord();
+    const word = isDaily ? getDailyWord() : getRandomWordFromCategory(selectedCatRef.current);
+    const secs = isDaily ? PHASE1_TIME : (DIFFICULTY[selectedDiffRef.current]?.secs ?? PHASE1_TIME);
     p1SuccessRef.current = false;
     p1WordRef.current = word;
     setP1Word(word);
-    setP1TimeLeft(PHASE1_TIME);
+    setP1Max(secs);
+    setP1TimeLeft(secs);
     setP1Predictions([]);
     setP1Success(false);
     setP1Result(null);
     setPhase("player_drawing");
     phaseRef.current = "player_drawing";
 
-    let t = PHASE1_TIME;
+    let t = secs;
     timerRef.current = setInterval(() => {
       t--;
       setP1TimeLeft(t);
@@ -333,24 +353,27 @@ function GameContent() {
 
   // ── Start Phase 2 ─────────────────────────────────────────────────────────
   const startPhase2 = useCallback(async () => {
-    // Daily challenge: use today's word; otherwise pick a random different word
+    // Daily: today's word; otherwise a different word from the chosen category
     const word = isDaily
       ? getDailyWord()
       : (() => {
-          const available = WORD_LIST.filter((w) => w.en !== p1Word?.en);
-          return available[Math.floor(Math.random() * available.length)];
+          const pool = getCategoryWords(selectedCatRef.current).filter((w) => w.en !== p1Word?.en);
+          const src = pool.length > 0 ? pool : WORD_LIST;
+          return src[Math.floor(Math.random() * src.length)];
         })();
+    const secs = isDaily ? PHASE2_TIME : (DIFFICULTY[selectedDiffRef.current]?.secs ?? PHASE2_TIME);
     const drawingEntry = await getRandomDrawing(word.en);
 
     p2GuessCorrectRef.current = false;
     p2BotDoneRef.current = false;
-    p2TimeLeftRef.current = PHASE2_TIME;
+    p2TimeLeftRef.current = secs;
 
     p2WordRef.current = word;
     setP2Word(word);
     setP2Drawing(drawingEntry?.strokes ?? null);
     setP2BotDone(false);
-    setP2TimeLeft(PHASE2_TIME);
+    setP2Max(secs);
+    setP2TimeLeft(secs);
     setP2GuessCorrect(false);
     setP2Result(null);
     setP2EarnedPoints(0);
@@ -359,7 +382,7 @@ function GameContent() {
     phaseRef.current = "bot_drawing";
 
     // Timer starts immediately — player can guess while bot draws for more points
-    let t = PHASE2_TIME;
+    let t = secs;
     timerRef.current = setInterval(() => {
       t--;
       p2TimeLeftRef.current = t;
@@ -453,19 +476,83 @@ function GameContent() {
           )}
 
           {/* ── IDLE ───────────────────────────────────────────────────────── */}
-          {phase === "idle" && (
+          {phase === "idle" && isDaily && (
             <div className="phase-enter glass p-8 flex flex-col items-center gap-6">
-              <div className="text-5xl float select-none">🎨</div>
+              <div className="text-5xl float select-none">📅</div>
+              <p className="font-medium text-center" style={{ color: "var(--text2)" }}>
+                Челлендж дня — одна попытка
+              </p>
+              <button
+                onClick={startPhase1}
+                disabled={!modelReady}
+                className="btn-primary w-full py-4 px-6 rounded-2xl font-bold text-lg text-white"
+              >
+                {modelReady ? "Начать!" : "Загрузка…"}
+              </button>
+            </div>
+          )}
+
+          {phase === "idle" && !isDaily && (
+            <div className="phase-enter glass p-6 flex flex-col gap-5">
               <div className="text-center">
+                <div className="text-4xl float select-none mb-1">🎨</div>
                 {bestScore > 0 && (
-                  <p className="text-sm font-semibold mb-2" style={{ color: "var(--yellow)" }}>
+                  <p className="text-sm font-semibold" style={{ color: "var(--yellow)" }}>
                     🏆 Рекорд: {bestScore}
                   </p>
                 )}
-                <p className="font-medium" style={{ color: "var(--text2)" }}>
-                  Готов сыграть?
-                </p>
               </div>
+
+              {/* Category */}
+              <div>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "var(--text3)" }}>
+                  Категория
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {CATEGORIES.map((c) => {
+                    const active = selectedCat === c.id;
+                    return (
+                      <button key={c.id} onClick={() => pickCat(c.id)}
+                        className="py-2.5 px-1 rounded-xl text-xs font-semibold transition-all flex flex-col items-center gap-1"
+                        style={{
+                          background: active ? "var(--accent-dim)" : "var(--item-bg)",
+                          border: `1px solid ${active ? "var(--border-accent)" : "var(--border)"}`,
+                          color: active ? "var(--accent-bright)" : "var(--text2)",
+                        }}
+                      >
+                        <span className="text-lg leading-none">{c.emoji}</span>
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Difficulty */}
+              <div>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: "var(--text3)" }}>
+                  Сложность
+                </p>
+                <div className="flex gap-2">
+                  {(["easy", "medium", "hard"] as const).map((d) => {
+                    const active = selectedDiff === d;
+                    return (
+                      <button key={d} onClick={() => pickDiff(d)}
+                        className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all leading-tight"
+                        style={{
+                          background: active ? "var(--accent)" : "var(--item-bg)",
+                          border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                          color: active ? "#fff" : "var(--text2)",
+                        }}
+                      >
+                        {DIFFICULTY[d].emoji} {DIFFICULTY[d].label}
+                        <span className="block text-[10px] opacity-70">{DIFFICULTY[d].secs}с</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <button
                 onClick={startPhase1}
                 disabled={!modelReady}
@@ -506,7 +593,7 @@ function GameContent() {
                 </div>
               </div>
 
-              <Timer seconds={p1TimeLeft} maxSeconds={PHASE1_TIME} />
+              <Timer seconds={p1TimeLeft} maxSeconds={p1Max} />
 
               <DrawingCanvas
                 canvasId="game-canvas"
@@ -604,7 +691,7 @@ function GameContent() {
               </div>
 
               {!p2GuessCorrect && (
-                <Timer seconds={p2TimeLeft} maxSeconds={PHASE2_TIME} />
+                <Timer seconds={p2TimeLeft} maxSeconds={p2Max} />
               )}
 
               <BotCanvas
