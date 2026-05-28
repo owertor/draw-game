@@ -152,7 +152,7 @@ function RoomView({ code }: { code: string }) {
         </p>
         {results.length === 0 ? (
           <p className="text-center py-6 text-sm" style={{ color: "var(--text2)" }}>
-            Ещё никто не сыграл — будь первым!
+            Ещё никто не сыграл — стань первым
           </p>
         ) : (
           results.map((r, i) => {
@@ -160,16 +160,16 @@ function RoomView({ code }: { code: string }) {
             return (
               <div key={r.user_id} className="flex items-center gap-3 px-3 py-3 rounded-xl"
                 style={{
-                  background: isMe ? "rgba(99,102,241,0.1)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
-                  border: isMe ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
+                  background: isMe ? "var(--accent-dim)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
+                  border: isMe ? "1px solid var(--border-accent)" : "1px solid transparent",
                 }}
               >
                 <span className="w-7 text-center text-sm font-bold">{medals[i] ?? i + 1}</span>
                 <span className="text-2xl leading-none select-none">{r.avatar}</span>
                 <span className="flex-1 min-w-0 truncate text-sm font-semibold" style={{ color: "var(--text)" }}>
-                  {r.nickname}{isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
+                  {r.nickname}{isMe && <span style={{ color: "var(--accent)" }}> (ты)</span>}
                 </span>
-                <span className="text-sm font-black tabular-nums" style={{ color: "var(--yellow)" }}>{r.score}</span>
+                <span className="text-sm font-black tabular-nums" style={{ color: "var(--accent)" }}>{r.score}</span>
               </div>
             );
           })

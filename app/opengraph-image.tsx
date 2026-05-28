@@ -15,19 +15,19 @@ export default function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0b0b18 0%, #14122a 100%)",
-          color: "#f0f0f8",
+          background: "#f4f1ea",
+          color: "#211d17",
           fontFamily: "sans-serif",
         }}
       >
         <div style={{ fontSize: 120 }}>🎨</div>
-        <div style={{ fontSize: 88, fontWeight: 900, color: "#a78bfa", marginTop: 8 }}>
+        <div style={{ fontSize: 88, fontWeight: 800, color: "#211d17", marginTop: 8, letterSpacing: "-0.03em" }}>
           Draw &amp; Guess
         </div>
-        <div style={{ fontSize: 40, color: "rgba(240,240,248,0.65)", marginTop: 16 }}>
+        <div style={{ fontSize: 40, color: "rgba(33,29,23,0.62)", marginTop: 16 }}>
           Рисуй — бот угадывает. Бот рисует — угадываешь ты.
         </div>
-        <div style={{ fontSize: 30, color: "#818cf8", marginTop: 40 }}>
+        <div style={{ fontSize: 30, color: "#b05833", marginTop: 40, fontWeight: 600 }}>
           draw-game-tan.vercel.app
         </div>
       </div>

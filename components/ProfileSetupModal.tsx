@@ -26,16 +26,16 @@ export default function ProfileSetupModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ background: "rgba(31,28,22,0.45)", backdropFilter: "blur(6px)", zIndex: "var(--z-overlay)" }}
     >
       <div
         className="w-full max-w-sm rounded-2xl p-6 flex flex-col gap-5"
-        style={{ background: "var(--bg2)", border: "1px solid var(--border)" }}
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 12px 40px rgba(31,28,22,0.18)" }}
       >
         <div className="text-center">
           <div className="text-4xl mb-2">{avatar}</div>
-          <h2 className="text-xl font-black text-gradient">Создай профиль</h2>
+          <h2 className="text-xl font-extrabold tracking-tight" style={{ color: "var(--text)" }}>Создай профиль</h2>
           <p className="text-sm mt-1" style={{ color: "var(--text2)" }}>
             Выбери аватар и никнейм
           </p>
@@ -49,7 +49,7 @@ export default function ProfileSetupModal() {
               onClick={() => setAvatar(em)}
               className="text-xl rounded-xl p-2 transition-all"
               style={{
-                background: avatar === em ? "var(--accent-dim)" : "rgba(255,255,255,0.04)",
+                background: avatar === em ? "var(--accent-dim)" : "var(--item-bg)",
                 border: avatar === em ? "1px solid var(--border-accent)" : "1px solid transparent",
               }}
             >
@@ -67,7 +67,7 @@ export default function ProfileSetupModal() {
             maxLength={20}
             className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none"
             style={{
-              background: "rgba(255,255,255,0.05)",
+              background: "var(--input-bg)",
               border: "1px solid var(--border)",
               color: "var(--text)",
             }}
@@ -76,9 +76,9 @@ export default function ProfileSetupModal() {
           <button
             type="submit"
             disabled={saving || !nickname.trim()}
-            className="btn-primary py-3 rounded-xl font-bold disabled:opacity-40"
+            className="btn-primary py-3 rounded-xl font-bold text-white disabled:opacity-40"
           >
-            {saving ? "Сохранение…" : "Начать игру 🎮"}
+            {saving ? "Сохранение…" : "Начать игру"}
           </button>
         </form>
       </div>

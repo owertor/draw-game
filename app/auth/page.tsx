@@ -56,7 +56,7 @@ export default function AuthPage() {
         setError(error.includes("already") ? "Этот email уже зарегистрирован" : error);
         setLoading(false); return;
       }
-      setSuccess("Письмо с подтверждением отправлено на почту!");
+      setSuccess("Письмо с подтверждением отправлено на почту.");
     }
     setLoading(false);
   };
@@ -68,17 +68,17 @@ export default function AuthPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
+    <main className="min-h-dvh flex items-center justify-center p-4">
       <div className="w-full max-w-sm flex flex-col gap-6">
 
         <div className="text-center">
           <Link href="/" className="text-3xl">🎨</Link>
-          <h1 className="text-2xl font-black text-gradient mt-2">Draw &amp; Guess</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight mt-2" style={{ color: "var(--text)" }}>Draw &amp; Guess</h1>
         </div>
 
         <div
           className="rounded-2xl p-6 flex flex-col gap-4"
-          style={{ background: "var(--bg2)", border: "1px solid var(--border)" }}
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
           {/* Tabs */}
           <div

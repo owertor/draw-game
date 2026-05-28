@@ -24,20 +24,16 @@ export default function GuessInput({ onGuess, disabled, correct }: GuessInputPro
   };
 
   const border = correct
-    ? "2px solid rgba(34,197,94,0.6)"
+    ? "2px solid var(--green)"
     : focused
-    ? "2px solid rgba(99,102,241,0.6)"
-    : "2px solid rgba(255,255,255,0.1)";
+    ? "2px solid var(--accent)"
+    : "2px solid var(--border)";
 
-  const shadow = correct
-    ? "0 0 20px rgba(34,197,94,0.18)"
-    : focused
-    ? "0 0 20px rgba(99,102,241,0.15)"
-    : "none";
+  const shadow = "none";
 
   const bg = correct
-    ? "rgba(34,197,94,0.1)"
-    : "rgba(255,255,255,0.05)";
+    ? "rgba(63,125,78,0.10)"
+    : "var(--input-bg)";
 
   return (
     <div className="w-full flex flex-col gap-2">

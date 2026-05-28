@@ -11,16 +11,10 @@ export default function Timer({ seconds, maxSeconds, urgent }: TimerProps) {
   const isUrgent = urgent ?? seconds <= 5;
 
   const barBg = isUrgent
-    ? "linear-gradient(90deg, #ef4444, #f87171)"
+    ? "var(--red)"
     : pct > 55
-    ? "linear-gradient(90deg, #6366f1, #8b5cf6)"
-    : "linear-gradient(90deg, #f59e0b, #fb923c)";
-
-  const glow = isUrgent
-    ? "0 0 10px rgba(239,68,68,0.5)"
-    : pct > 55
-    ? "0 0 10px rgba(99,102,241,0.45)"
-    : "0 0 10px rgba(245,158,11,0.45)";
+    ? "var(--text)"
+    : "var(--yellow)";
 
   return (
     <div className="w-full flex flex-col gap-2">
@@ -42,11 +36,11 @@ export default function Timer({ seconds, maxSeconds, urgent }: TimerProps) {
 
       <div
         className="w-full rounded-full overflow-hidden"
-        style={{ height: "6px", background: "rgba(255,255,255,0.07)" }}
+        style={{ height: "6px", background: "var(--item-bg)" }}
       >
         <div
           className="h-full rounded-full transition-all duration-1000 ease-linear"
-          style={{ width: `${pct}%`, background: barBg, boxShadow: glow }}
+          style={{ width: `${pct}%`, background: barBg }}
         />
       </div>
     </div>

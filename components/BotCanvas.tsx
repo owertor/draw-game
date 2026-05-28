@@ -140,8 +140,8 @@ export default function BotCanvas({
     <div
       className="w-full rounded-2xl overflow-hidden"
       style={{
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "0 0 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+        border: "1px solid var(--border-strong)",
+        boxShadow: "0 2px 8px rgba(31,28,22,0.08)",
       }}
     >
       <canvas

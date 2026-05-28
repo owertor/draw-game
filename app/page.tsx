@@ -5,13 +5,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import ThemeToggle from "@/components/ThemeToggle";
 
-const HOW_TO = [
-  { icon: "✏️", title: "Рисуй слово",      desc: "30 секунд на рисунок — карандаш, цвет, воображение" },
-  { icon: "🤖", title: "ИИ угадывает",     desc: "Нейросеть распознаёт рисунок в реальном времени" },
-  { icon: "👁️", title: "Бот рисует",       desc: "Наблюдай за штрихами и угадай раньше чем бот закончит" },
-  { icon: "⚡", title: "Скорость = очки",  desc: "Чем быстрее ответ — тем выше результат в таблице" },
+const STEPS = [
+  { n: "01", title: "Рисуй слово", desc: "Тридцать секунд на набросок: карандаш, лист, воображение." },
+  { n: "02", title: "Нейросеть угадывает", desc: "Модель распознаёт рисунок прямо в браузере, по ходу штрихов." },
+  { n: "03", title: "Бот рисует в ответ", desc: "Смотри, как он выводит линии, и угадывай раньше, чем он закончит." },
+  { n: "04", title: "Скорость решает", desc: "Чем быстрее ответ, тем выше место в таблице." },
 ];
 
 export default function LandingPage() {
@@ -32,32 +31,28 @@ export default function LandingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <span className="text-3xl float select-none">🎨</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-dvh flex flex-col">
 
       {/* ── Top navbar ──────────────────────────────────────── */}
       <header
-        className="fixed top-0 inset-x-0 z-50 h-16 flex items-center"
-        style={{
-          background:     "var(--navbar-bg)",
-          backdropFilter: "blur(20px)",
-          borderBottom:   "1px solid var(--border)",
-        }}
+        className="fixed top-0 inset-x-0 h-16 flex items-center"
+        style={{ background: "var(--navbar-bg)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--border)", zIndex: "var(--z-nav)" }}
       >
-        <div className="max-w-5xl mx-auto w-full px-6 flex items-center gap-4">
-          <span className="text-xl select-none">🎨</span>
-          <span className="font-black text-gradient">Draw &amp; Guess</span>
+        <div className="max-w-5xl mx-auto w-full px-6 flex items-center gap-3">
+          <span className="text-lg select-none">🎨</span>
+          <span className="font-extrabold tracking-tight" style={{ color: "var(--text)" }}>Draw &amp; Guess</span>
           <div className="flex-1" />
-          <ThemeToggle variant="inline" />
           <Link
             href="/auth"
-            className="btn-primary px-4 py-2 rounded-xl text-sm font-bold text-white transition-all"
+            className="text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-[var(--item-bg)]"
+            style={{ color: "var(--text2)" }}
           >
             Войти
           </Link>
@@ -65,176 +60,177 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero ────────────────────────────────────────────── */}
-      <section className="flex-1 flex flex-col items-center justify-center pt-16 min-h-screen px-6 text-center relative overflow-hidden">
+      <section className="flex-1 flex items-center pt-16">
+        <div className="max-w-5xl mx-auto w-full px-6 py-20 sm:py-28">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold mb-5" style={{ color: "var(--accent)" }}>
+              Игра на распознавание рисунков
+            </p>
 
-        {/* Glow blobs */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div style={{
-            position: "absolute", top: "-5%", left: "50%", transform: "translateX(-50%)",
-            width: 800, height: 600,
-            background: "radial-gradient(ellipse, rgba(99,102,241,0.22) 0%, transparent 60%)",
-            filter: "blur(70px)",
-          }} />
-          <div style={{
-            position: "absolute", bottom: "5%", right: "-10%",
-            width: 400, height: 300,
-            background: "radial-gradient(ellipse, rgba(139,92,246,0.15) 0%, transparent 65%)",
-            filter: "blur(60px)",
-          }} />
-          <div style={{
-            position: "absolute", top: "40%", left: "-10%",
-            width: 350, height: 250,
-            background: "radial-gradient(ellipse, rgba(99,102,241,0.10) 0%, transparent 65%)",
-            filter: "blur(50px)",
-          }} />
-        </div>
+            <h1
+              className="font-extrabold tracking-tight"
+              style={{ color: "var(--text)", fontSize: "clamp(2.6rem, 7vw, 4.75rem)", lineHeight: 1.02, textWrap: "balance" }}
+            >
+              Рисуй слово —{" "}
+              <span className="relative inline-block">
+                нейросеть&nbsp;угадывает
+                <svg
+                  className="absolute left-0 -bottom-2 w-full" height="14" viewBox="0 0 300 14"
+                  fill="none" preserveAspectRatio="none" aria-hidden
+                >
+                  <path d="M2 9 C 60 3, 110 12, 160 6 S 250 3, 298 8"
+                    stroke="var(--accent)" strokeWidth="3.5" strokeLinecap="round" />
+                </svg>
+              </span>
+            </h1>
 
-        <div className="relative z-10 flex flex-col items-center gap-6 max-w-2xl w-full">
+            <p className="mt-8 text-lg sm:text-xl max-w-md leading-relaxed" style={{ color: "var(--text2)" }}>
+              Рисуешь — бот угадывает. Бот рисует — угадываешь ты. Без загрузок, прямо в браузере.
+            </p>
 
-          <div className="text-7xl sm:text-8xl select-none float leading-none">🎨</div>
-
-          <h1 className="text-5xl sm:text-7xl font-black tracking-tight text-gradient leading-none">
-            Draw &amp; Guess
-          </h1>
-
-          <p className="text-base sm:text-xl font-medium max-w-md" style={{ color: "var(--text2)" }}>
-            Рисуй — бот угадывает.<br />
-            Бот рисует — угадываешь ты.
-          </p>
-
-          <Link
-            href="/auth"
-            className="btn-primary mt-2 px-10 py-4 rounded-2xl text-lg font-black text-white inline-block"
-          >
-            Начать играть →
-          </Link>
-
-          <p className="text-sm" style={{ color: "var(--text3)" }}>
-            Бесплатно · Без загрузок · Прямо в браузере
-          </p>
-
-          {/* Live stats */}
-          {stats && (stats.players > 0 || stats.games > 0) && (
-            <div className="flex gap-8 mt-2">
-              {stats.players > 0 && (
-                <div className="text-center">
-                  <p className="text-2xl font-black" style={{ color: "var(--accent-bright)" }}>
-                    {stats.players.toLocaleString("ru")}
-                  </p>
-                  <p className="text-xs font-semibold" style={{ color: "var(--text3)" }}>игроков</p>
-                </div>
-              )}
-              {stats.games > 0 && (
-                <div className="text-center">
-                  <p className="text-2xl font-black" style={{ color: "var(--accent-bright)" }}>
-                    {stats.games.toLocaleString("ru")}
-                  </p>
-                  <p className="text-xs font-semibold" style={{ color: "var(--text3)" }}>игр сыграно</p>
-                </div>
-              )}
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <Link
+                href="/auth"
+                className="btn-primary px-7 py-3.5 rounded-xl text-base font-bold text-white inline-block"
+              >
+                Начать играть
+              </Link>
+              <span className="text-sm" style={{ color: "var(--text3)" }}>
+                Бесплатно · регистрация за полминуты
+              </span>
             </div>
-          )}
 
+            {/* Live stats */}
+            {stats && (stats.players > 0 || stats.games > 0) && (
+              <div className="mt-12 flex gap-10">
+                {stats.players > 0 && (
+                  <div>
+                    <p className="text-3xl font-extrabold tabular-nums" style={{ color: "var(--text)" }}>
+                      {stats.players.toLocaleString("ru")}
+                    </p>
+                    <p className="text-sm font-medium mt-0.5" style={{ color: "var(--text3)" }}>игроков</p>
+                  </div>
+                )}
+                {stats.games > 0 && (
+                  <div>
+                    <p className="text-3xl font-extrabold tabular-nums" style={{ color: "var(--text)" }}>
+                      {stats.games.toLocaleString("ru")}
+                    </p>
+                    <p className="text-sm font-medium mt-0.5" style={{ color: "var(--text3)" }}>партий сыграно</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Game preview ─────────────────────────────────────── */}
+      <section className="w-full" style={{ borderTop: "1px solid var(--border)", background: "var(--bg2)" }}>
+        <div className="max-w-5xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-tight mb-3" style={{ color: "var(--text)" }}>
+              Узнавание на лету
+            </h2>
+            <p className="text-base leading-relaxed max-w-sm" style={{ color: "var(--text2)" }}>
+              Пока ты ведёшь линию, модель уже строит догадки и обновляет их с каждым штрихом.
+              Чем точнее рисунок, тем увереннее ответ.
+            </p>
+          </div>
+
+          {/* Canvas mockup */}
+          <div className="glass p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-6">
+            <div
+              className="w-full sm:w-44 h-44 rounded-xl flex items-center justify-center shrink-0 relative overflow-hidden"
+              style={{ background: "#fff", border: "1px solid var(--border-strong)" }}
+            >
+              <svg viewBox="0 0 200 160" className="absolute inset-0 w-full h-full">
+                <path d="M60,110 Q80,60 100,55 Q120,50 140,90 Q155,120 130,130 Q100,145 70,130 Z"
+                  fill="none" stroke="#211d17" strokeWidth="3.5" strokeLinecap="round" />
+                <circle cx="85"  cy="82" r="5" fill="#211d17" />
+                <circle cx="115" cy="80" r="5" fill="#211d17" />
+                <path d="M88,100 Q100,112 112,100" fill="none" stroke="#211d17" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </div>
+
+            <div className="flex-1 w-full flex flex-col gap-2.5">
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text3)" }}>
+                бот думает
+              </p>
+              {[
+                { label: "Кот",    pct: 94, correct: true  },
+                { label: "Кролик", pct: 38, correct: false },
+                { label: "Мишка",  pct: 21, correct: false },
+              ].map(({ label, pct, correct }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <span
+                    className="w-14 text-sm font-semibold shrink-0"
+                    style={{ color: correct ? "var(--green)" : "var(--text2)" }}
+                  >
+                    {correct && "✓ "}{label}
+                  </span>
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--item-bg)" }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${pct}%`, background: correct ? "var(--green)" : "var(--text3)" }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold tabular-nums w-8 text-right" style={{ color: "var(--text3)" }}>
+                    {pct}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ── How it works ────────────────────────────────────── */}
-      <section className="w-full max-w-4xl mx-auto px-6 py-20">
-        <h2 className="text-2xl font-black text-center mb-10" style={{ color: "var(--text)" }}>
+      <section className="w-full max-w-5xl mx-auto px-6 py-24">
+        <h2 className="text-2xl font-extrabold tracking-tight mb-12" style={{ color: "var(--text)" }}>
           Как это работает
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {HOW_TO.map(({ icon, title, desc }) => (
+        <div className="flex flex-col">
+          {STEPS.map(({ n, title, desc }, i) => (
             <div
-              key={title}
-              className="glass-accent rounded-2xl p-5 flex flex-col gap-3"
+              key={n}
+              className="grid grid-cols-[auto_1fr] sm:grid-cols-[5rem_1fr] gap-5 sm:gap-8 py-7"
+              style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
-              <span className="text-3xl select-none">{icon}</span>
-              <p className="font-bold text-sm" style={{ color: "var(--text)" }}>{title}</p>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--text2)" }}>{desc}</p>
+              <span className="text-2xl font-extrabold tabular-nums" style={{ color: "var(--accent)" }}>{n}</span>
+              <div className="max-w-md">
+                <h3 className="text-lg font-bold mb-1" style={{ color: "var(--text)" }}>{title}</h3>
+                <p className="text-base leading-relaxed" style={{ color: "var(--text2)" }}>{desc}</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Game preview mockup ─────────────────────────────── */}
-      <section className="w-full max-w-4xl mx-auto px-6 pb-20">
-        <div className="glass rounded-3xl p-6 sm:p-10 flex flex-col sm:flex-row items-center gap-8">
-
-          {/* Canvas mockup */}
-          <div
-            className="w-full sm:w-56 h-48 rounded-2xl flex items-center justify-center text-6xl shrink-0 select-none relative overflow-hidden"
-            style={{ background: "#fff", border: "2px solid var(--border-accent)" }}
-          >
-            {/* simulated pencil strokes with SVG */}
-            <svg viewBox="0 0 200 160" className="absolute inset-0 w-full h-full" style={{ opacity: 0.7 }}>
-              <path d="M60,110 Q80,60 100,55 Q120,50 140,90 Q155,120 130,130 Q100,145 70,130 Z"
-                fill="none" stroke="#333" strokeWidth="3.5" strokeLinecap="round" />
-              <circle cx="85"  cy="82" r="5" fill="#333" />
-              <circle cx="115" cy="80" r="5" fill="#333" />
-              <path d="M88,100 Q100,112 112,100" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-          </div>
-
-          {/* Bot guesses */}
-          <div className="flex-1 w-full flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text3)" }}>
-              🤖 Бот думает…
-            </p>
-            {[
-              { label: "Кот",    pct: 94, correct: true  },
-              { label: "Кролик", pct: 38, correct: false },
-              { label: "Мишка",  pct: 21, correct: false },
-            ].map(({ label, pct, correct }) => (
-              <div key={label} className="flex items-center gap-3">
-                <span
-                  className="w-16 text-sm font-bold shrink-0"
-                  style={{ color: correct ? "var(--green)" : "var(--text)" }}
-                >
-                  {correct && "✓ "}{label}
-                </span>
-                <div
-                  className="flex-1 h-5 rounded-full overflow-hidden"
-                  style={{ background: "var(--item-bg)" }}
-                >
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${pct}%`,
-                      background: correct
-                        ? "linear-gradient(90deg,#22c55e,#4ade80)"
-                        : "linear-gradient(90deg,var(--accent),var(--violet))",
-                    }}
-                  />
-                </div>
-                <span className="text-xs font-bold w-8 text-right" style={{ color: "var(--text3)" }}>
-                  {pct}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA strip ───────────────────────────────────────── */}
-      <section className="py-20 px-6">
-        <div
-          className="glass max-w-lg mx-auto p-8 rounded-3xl flex flex-col items-center gap-4 text-center"
-        >
-          <p className="text-2xl font-black" style={{ color: "var(--text)" }}>
-            Готов попробовать?
-          </p>
-          <p className="text-sm" style={{ color: "var(--text2)" }}>
-            Создай профиль за 30 секунд и начинай играть прямо сейчас
-          </p>
+      {/* ── CTA ─────────────────────────────────────────────── */}
+      <section className="w-full" style={{ borderTop: "1px solid var(--border)", background: "var(--bg2)" }}>
+        <div className="max-w-5xl mx-auto px-6 py-20 flex flex-col items-start gap-5">
+          <h2 className="text-3xl font-extrabold tracking-tight" style={{ color: "var(--text)", textWrap: "balance" }}>
+            Готов проверить, насколько понятно ты рисуешь?
+          </h2>
           <Link
             href="/auth"
-            className="btn-primary px-8 py-3 rounded-xl font-bold text-white text-base"
+            className="btn-primary px-7 py-3.5 rounded-xl text-base font-bold text-white inline-block"
           >
-            Зарегистрироваться бесплатно →
+            Создать профиль
           </Link>
         </div>
       </section>
+
+      {/* ── Footer ──────────────────────────────────────────── */}
+      <footer style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="max-w-5xl mx-auto px-6 py-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" style={{ color: "var(--text3)" }}>
+          <span className="font-semibold" style={{ color: "var(--text2)" }}>🎨 Draw &amp; Guess</span>
+          <span>© {new Date().getFullYear()}</span>
+          <div className="flex-1" />
+          <Link href="/auth" className="hover:text-[var(--text)] transition-colors">Войти</Link>
+        </div>
+      </footer>
 
     </div>
   );

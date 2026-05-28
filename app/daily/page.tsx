@@ -62,7 +62,7 @@ export default function DailyPage() {
         {/* Main card */}
         <div
           className="rounded-2xl p-8 flex flex-col items-center gap-4 text-center"
-          style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.22)" }}
+          style={{ background: "var(--accent-dim)", border: "1px solid var(--border-accent)" }}
         >
           <span className="text-5xl select-none">📅</span>
 
@@ -75,7 +75,7 @@ export default function DailyPage() {
               </p>
               <div className="flex gap-6">
                 <div>
-                  <p className="text-3xl font-black" style={{ color: "var(--yellow)" }}>{score}</p>
+                  <p className="text-3xl font-black" style={{ color: "var(--accent)" }}>{score}</p>
                   <p className="text-xs font-semibold" style={{ color: "var(--text3)" }}>очков</p>
                 </div>
                 {rank && (
@@ -126,7 +126,7 @@ export default function DailyPage() {
                 <span className="text-sm font-semibold" style={{ color: "var(--text2)" }}>
                   {new Date(h.date + "T00:00:00Z").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
                 </span>
-                <span className="text-sm font-black tabular-nums" style={{ color: "var(--yellow)" }}>
+                <span className="text-sm font-black tabular-nums" style={{ color: "var(--accent)" }}>
                   {h.score}
                 </span>
               </div>

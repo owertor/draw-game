@@ -43,7 +43,11 @@ export async function createRoom(creatorId: string): Promise<Room | null> {
       .select("id, code, words, creator_id")
       .single();
     if (!error && data) return data as Room;
-    // unique-code collision → retry with a new code
+    // Log the real reason (missing table, RLS, etc.) — only a duplicate code is worth retrying.
+    if (error) {
+      console.error("[rooms] create failed:", error.message);
+      if (!/duplicate key|unique/i.test(error.message)) break;
+    }
   }
   return null;
 }

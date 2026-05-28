@@ -15,7 +15,6 @@ const MODES = [
     desc: "Рисуй слово — бот угадывает. Бот рисует — угадываешь ты.",
     href: "/game",
     available: true,
-    accent: "#6366f1",
   },
   {
     id: "speed",
@@ -25,7 +24,6 @@ const MODES = [
     href: "#",
     available: false,
     badge: "Скоро",
-    accent: "#f59e0b",
   },
   {
     id: "vs",
@@ -35,7 +33,6 @@ const MODES = [
     href: "#",
     available: false,
     badge: "Фаза 3",
-    accent: "#22c55e",
   },
   {
     id: "endless",
@@ -45,7 +42,6 @@ const MODES = [
     href: "#",
     available: false,
     badge: "Скоро",
-    accent: "#8b5cf6",
   },
 ] as const;
 
@@ -103,13 +99,14 @@ export default function DashboardPage() {
               <div
                 key={m.id}
                 className={`relative rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200 ${
-                  m.available ? "hover:scale-[1.02] cursor-pointer" : "opacity-60"
+                  m.available ? "hover:-translate-y-0.5 cursor-pointer" : "opacity-60"
                 }`}
                 style={{
-                  background: m.available
-                    ? `linear-gradient(135deg, ${m.accent}20, ${m.accent}08)`
-                    : "var(--item-bg)",
-                  border: `1px solid ${m.available ? m.accent + "35" : "var(--border)"}`,
+                  background: m.available ? "var(--surface)" : "var(--item-bg)",
+                  border: m.available
+                    ? "1px solid var(--border-accent)"
+                    : "1px solid var(--border)",
+                  boxShadow: m.available ? "0 1px 2px rgba(31,28,22,0.04)" : "none",
                 }}
               >
                 {/* Coming-soon badge */}
@@ -169,15 +166,15 @@ export default function DashboardPage() {
           <div
             className="rounded-2xl p-5 flex items-center gap-4"
             style={{
-              background: "rgba(251,191,36,0.06)",
-              border: "1px solid rgba(251,191,36,0.22)",
+              background: "var(--accent-dim)",
+              border: "1px solid var(--border-accent)",
             }}
           >
             <span className="text-4xl select-none shrink-0">📅</span>
             <div className="flex-1 min-w-0">
               <p className="font-black text-base" style={{ color: "var(--text)" }}>
                 {dailyDone
-                  ? `Ты уже сыграл! ${dailyScore} очков ✓`
+                  ? `Сыграно · ${dailyScore} очков`
                   : `Слово дня: «${dailyWord.ru}»`}
               </p>
               <p className="text-sm mt-1" style={{ color: "var(--text2)" }}>
@@ -213,10 +210,10 @@ export default function DashboardPage() {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Лучший счёт",  value: profile.best_score,              color: "var(--yellow)"        },
-                { label: "Всего очков",  value: profile.total_score,             color: "var(--text)"          },
-                { label: "Игр сыграно", value: profile.games_played,            color: "var(--text)"          },
-                { label: "🔥 Стрик",     value: `${profile.current_streak} дн.`, color: "var(--accent-bright)" },
+                { label: "Лучший счёт",  value: profile.best_score,              color: "var(--accent)" },
+                { label: "Всего очков",  value: profile.total_score,             color: "var(--text)"   },
+                { label: "Игр сыграно", value: profile.games_played,            color: "var(--text)"   },
+                { label: "Стрик",        value: `${profile.current_streak} дн.`, color: "var(--accent)" },
               ].map(({ label, value, color }) => (
                 <div
                   key={label}

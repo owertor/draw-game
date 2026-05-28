@@ -111,10 +111,10 @@ export default function ProfilePage() {
         {/* ── Stats ── */}
         <div className="glass p-5 grid grid-cols-2 gap-3">
           {[
-            { label: "Лучший счёт",  value: profile?.best_score,    color: "var(--yellow)"        },
-            { label: "Всего очков",  value: profile?.total_score,   color: "var(--text)"          },
-            { label: "Игр сыграно", value: profile?.games_played,  color: "var(--text)"          },
-            { label: "🔥 Стрик",     value: `${profile?.current_streak ?? 0} дн.`, color: "var(--accent-bright)" },
+            { label: "Лучший счёт",  value: profile?.best_score,    color: "var(--accent)" },
+            { label: "Всего очков",  value: profile?.total_score,   color: "var(--text)"   },
+            { label: "Игр сыграно", value: profile?.games_played,  color: "var(--text)"   },
+            { label: "Стрик",        value: `${profile?.current_streak ?? 0} дн.`, color: "var(--accent)" },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-xl p-3 text-center"
               style={{ background: "var(--subtle-bg)", border: "1px solid var(--border)" }}
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                     <p className="text-xs" style={{ color: "var(--text2)" }}>{a.description}</p>
                   </div>
                   {done && (
-                    <span className="ml-auto text-xs font-bold" style={{ color: "var(--accent-bright)" }}>✓</span>
+                    <span className="ml-auto text-xs font-bold" style={{ color: "var(--accent)" }}>✓</span>
                   )}
                 </div>
               );
@@ -162,14 +162,16 @@ export default function ProfilePage() {
         {/* ── Sign out ── */}
         <button
           onClick={signOut}
-          className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+          className="w-full py-3 rounded-xl text-sm font-semibold transition-colors"
           style={{
-            background: "rgba(248,113,113,0.06)",
-            border: "1px solid rgba(248,113,113,0.18)",
-            color: "var(--red)",
+            background: "var(--item-bg)",
+            border: "1px solid var(--border)",
+            color: "var(--text2)",
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "rgba(177,69,58,0.35)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text2)"; e.currentTarget.style.borderColor = "var(--border)"; }}
         >
-          ↩ Выйти из аккаунта
+          Выйти из аккаунта
         </button>
 
         </div>

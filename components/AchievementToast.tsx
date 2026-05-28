@@ -22,22 +22,22 @@ export default function AchievementToast({ achievement, onDone }: Props) {
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl"
+      className="fixed bottom-6 left-1/2 flex items-center gap-3 px-5 py-3 rounded-2xl"
       style={{
         transform: `translateX(-50%) translateY(${visible ? "0" : "80px"})`,
         opacity: visible ? 1 : 0,
         transition: "transform 0.4s cubic-bezier(.34,1.56,.64,1), opacity 0.3s",
-        background: "rgba(99,102,241,0.15)",
-        border: "1px solid rgba(99,102,241,0.4)",
-        backdropFilter: "blur(12px)",
-        boxShadow: "0 8px 32px rgba(99,102,241,0.25)",
+        background: "var(--surface)",
+        border: "1px solid var(--border-accent)",
+        boxShadow: "0 8px 28px rgba(31,28,22,0.12)",
         minWidth: "240px",
+        zIndex: "var(--z-toast)",
       }}
     >
       <span className="text-2xl">{achievement.emoji}</span>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--accent-bright)" }}>
-          Достижение разблокировано!
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--accent)" }}>
+          Достижение разблокировано
         </p>
         <p className="text-sm font-bold" style={{ color: "var(--text)" }}>{achievement.title}</p>
         <p className="text-xs" style={{ color: "var(--text2)" }}>{achievement.description}</p>

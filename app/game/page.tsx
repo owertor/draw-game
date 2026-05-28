@@ -504,7 +504,7 @@ function GameContent() {
       <ModelLoader onReady={handleModelReady} />
       <AchievementToast achievement={toastAchievement} onDone={() => setToastAchievement(null)} />
 
-      <main className="flex flex-col items-center min-h-screen p-4 gap-4 pb-10">
+      <main className="flex flex-col items-center min-h-dvh p-4 gap-4 pb-10">
 
         {/* Header */}
         <header className="w-full max-w-lg flex items-center justify-between pt-3">
@@ -515,7 +515,7 @@ function GameContent() {
           >
             ← Меню
           </Link>
-          <h1 className="text-lg font-black text-gradient">Draw &amp; Guess</h1>
+          <h1 className="text-lg font-extrabold tracking-tight" style={{ color: "var(--text)" }}>Draw &amp; Guess</h1>
           <div className="w-16" />
         </header>
 
@@ -574,7 +574,7 @@ function GameContent() {
               <div className="text-center">
                 <div className="text-4xl float select-none mb-1">🎨</div>
                 {bestScore > 0 && (
-                  <p className="text-sm font-semibold" style={{ color: "var(--yellow)" }}>
+                  <p className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
                     🏆 Рекорд: {bestScore}
                   </p>
                 )}
@@ -705,15 +705,10 @@ function GameContent() {
                             style={{
                               width: `${pct}%`,
                               background: isTarget
-                                ? "linear-gradient(90deg,#22c55e,#4ade80)"
+                                ? "rgba(63,125,78,0.28)"
                                 : i === 0
-                                ? "linear-gradient(90deg,#6366f1,#8b5cf6)"
-                                : "var(--border)",
-                              boxShadow: isTarget
-                                ? "0 0 12px rgba(34,197,94,0.4)"
-                                : i === 0
-                                ? "0 0 12px rgba(99,102,241,0.3)"
-                                : "none",
+                                ? "var(--accent-dim)"
+                                : "var(--item-bg)",
                             }}
                           />
                           <span className="absolute inset-0 flex items-center px-3 text-xs font-semibold"
@@ -734,7 +729,7 @@ function GameContent() {
               {p1Success && (
                 <div
                   className="rounded-2xl p-4 text-center"
-                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}
+                  style={{ background: "rgba(63,125,78,0.10)", border: "1px solid rgba(63,125,78,0.28)" }}
                 >
                   <p className="font-bold text-lg" style={{ color: "var(--green)" }}>
                     🎉 Бот угадал! +{p1TimeLeft * POINTS_PER_SECOND} очков
@@ -758,9 +753,9 @@ function GameContent() {
                 <div
                   className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider"
                   style={{
-                    background: "rgba(139,92,246,0.12)",
-                    border:     "1px solid rgba(139,92,246,0.35)",
-                    color:      "#c084fc",
+                    background: "var(--accent-dim)",
+                    border:     "1px solid var(--border-accent)",
+                    color:      "var(--accent)",
                   }}
                 >
                   Фаза 2
@@ -784,8 +779,8 @@ function GameContent() {
                 <div
                   className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl fade-in"
                   style={{
-                    background: "rgba(251,191,36,0.07)",
-                    border:     "1px solid rgba(251,191,36,0.2)",
+                    background: "var(--accent-dim)",
+                    border:     "1px solid var(--border-accent)",
                   }}
                 >
                   <span className="text-base">💡</span>
@@ -810,7 +805,7 @@ function GameContent() {
               {p2GuessCorrect && (
                 <div
                   className="rounded-2xl p-4 text-center"
-                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}
+                  style={{ background: "rgba(63,125,78,0.10)", border: "1px solid rgba(63,125,78,0.28)" }}
                 >
                   <p className="font-bold text-lg" style={{ color: "var(--green)" }}>
                     🎉 Правильно! +{p2EarnedPoints} очков
@@ -830,7 +825,7 @@ function GameContent() {
                 </p>
                 <p className="text-2xl font-black" style={{ color: "var(--text)" }}>Готово!</p>
               </div>
-              <p className="text-5xl font-black tabular-nums" style={{ color: "var(--yellow)" }}>{sessionScore}</p>
+              <p className="text-5xl font-black tabular-nums" style={{ color: "var(--accent)" }}>{sessionScore}</p>
               <p className="text-sm" style={{ color: "var(--text2)" }}>Сравни счёт с друзьями в комнате</p>
               <Link href={`/rooms?code=${roomCode}`} className="btn-primary w-full py-3 rounded-xl font-bold text-white text-center">
                 К результатам комнаты →
@@ -863,7 +858,7 @@ function GameContent() {
                   {p1Result.success ? "Бот угадал!" : "Время вышло"}
                 </p>
               </div>
-              <p className="text-5xl font-black tabular-nums" style={{ color: "var(--yellow)" }}>
+              <p className="text-5xl font-black tabular-nums" style={{ color: "var(--accent)" }}>
                 +{p1Result.points}
               </p>
               <p className="text-sm" style={{ color: "var(--text2)" }}>
@@ -878,7 +873,7 @@ function GameContent() {
                   )
                 }
                 className="w-full py-3 rounded-xl font-semibold transition-all hover:opacity-80"
-                style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.28)", color: "var(--yellow)" }}
+                style={{ background: "var(--accent-dim)", border: "1px solid var(--border-accent)", color: "var(--accent)" }}
               >
                 📤 Поделиться результатом
               </button>

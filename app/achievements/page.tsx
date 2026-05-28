@@ -42,7 +42,7 @@ export default function AchievementsPage() {
           <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: "var(--input-bg)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: "linear-gradient(90deg,#6366f1,#8b5cf6)" }}
+              style={{ width: `${pct}%`, background: "var(--accent)" }}
             />
           </div>
           <span className="text-sm font-black tabular-nums" style={{ color: "var(--accent-bright)" }}>

@@ -95,7 +95,7 @@ export default function LeaderboardPage() {
     <AppShell>
       <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
 
-        <h1 className="text-3xl font-black text-gradient">Лидерборд</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "var(--text)" }}>Лидерборд</h1>
 
         {/* Tabs */}
         <div className="flex rounded-xl p-1 gap-1" style={{ background: "var(--item-bg)" }}>
@@ -116,7 +116,7 @@ export default function LeaderboardPage() {
           <div className="glass p-12 text-center" style={{ color: "var(--text2)" }}>Загрузка…</div>
         ) : rows.length === 0 ? (
           <div className="glass p-12 text-center text-sm" style={{ color: "var(--text2)" }}>
-            {tab === "daily" ? "Никто ещё не играл сегодня — будь первым!" : "Пока нет результатов"}
+            {tab === "daily" ? "Никто ещё не играл сегодня — стань первым" : "Пока нет результатов"}
           </div>
         ) : (
           <div className="flex flex-col gap-6">
@@ -131,18 +131,18 @@ export default function LeaderboardPage() {
                     <div key={r.key}
                       className="flex flex-col items-center gap-1.5 rounded-2xl px-2 py-4"
                       style={{
-                        background: r.isMe ? "rgba(99,102,241,0.12)" : "var(--item-bg)",
-                        border: `1px solid ${first ? "var(--border-accent)" : "var(--border)"}`,
+                        background: r.isMe ? "var(--accent-dim)" : "var(--item-bg)",
+                        border: `1px solid ${first || r.isMe ? "var(--border-accent)" : "var(--border)"}`,
                         transform: first ? "translateY(-12px)" : "none",
-                        boxShadow: first ? "0 0 24px rgba(99,102,241,0.18)" : "none",
+                        boxShadow: first ? "0 2px 10px rgba(31,28,22,0.08)" : "none",
                       }}
                     >
                       <span className={first ? "text-3xl" : "text-2xl"}>{medals[idx]}</span>
                       <span className={first ? "text-5xl leading-none select-none" : "text-4xl leading-none select-none"}>{r.avatar}</span>
                       <span className="text-sm font-bold text-center truncate w-full px-1" style={{ color: "var(--text)" }}>
-                        {r.name}{r.isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
+                        {r.name}{r.isMe && <span style={{ color: "var(--accent)" }}> (ты)</span>}
                       </span>
-                      <span className={`${first ? "text-xl" : "text-lg"} font-black tabular-nums`} style={{ color: "var(--yellow)" }}>
+                      <span className={`${first ? "text-xl" : "text-lg"} font-black tabular-nums`} style={{ color: "var(--accent)" }}>
                         {r.score}
                       </span>
                     </div>
@@ -155,20 +155,20 @@ export default function LeaderboardPage() {
             {rows.length > 0 && rows.length < 3 && (
               <div className="rounded-2xl p-6 flex items-center gap-5"
                 style={{
-                  background: rows[0].isMe ? "rgba(99,102,241,0.12)" : "var(--item-bg)",
+                  background: rows[0].isMe ? "var(--accent-dim)" : "var(--item-bg)",
                   border: "1px solid var(--border-accent)",
-                  boxShadow: "0 0 28px rgba(99,102,241,0.16)",
+                  boxShadow: "0 2px 10px rgba(31,28,22,0.08)",
                 }}
               >
                 <span className="text-6xl leading-none select-none shrink-0">{rows[0].avatar}</span>
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-xs uppercase tracking-widest font-bold" style={{ color: "var(--yellow)" }}>🥇 Чемпион</span>
+                  <span className="text-xs uppercase tracking-widest font-bold" style={{ color: "var(--accent)" }}>🥇 Чемпион</span>
                   <span className="text-2xl font-black truncate" style={{ color: "var(--text)" }}>
-                    {rows[0].name}{rows[0].isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
+                    {rows[0].name}{rows[0].isMe && <span style={{ color: "var(--accent)" }}> (ты)</span>}
                   </span>
                   {rows[0].sub && <span className="text-xs" style={{ color: "var(--text3)" }}>{rows[0].sub}</span>}
                 </div>
-                <span className="ml-auto text-3xl font-black tabular-nums" style={{ color: "var(--yellow)" }}>{rows[0].score}</span>
+                <span className="ml-auto text-3xl font-black tabular-nums" style={{ color: "var(--accent)" }}>{rows[0].score}</span>
               </div>
             )}
 
@@ -184,8 +184,8 @@ export default function LeaderboardPage() {
                     return (
                       <div key={r.key} className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all"
                         style={{
-                          background: r.isMe ? "rgba(99,102,241,0.1)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
-                          border:     r.isMe ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
+                          background: r.isMe ? "var(--accent-dim)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
+                          border:     r.isMe ? "1px solid var(--border-accent)" : "1px solid transparent",
                         }}
                       >
                         <span className="w-7 text-center text-sm font-bold tabular-nums" style={{ color: "var(--text3)" }}>
@@ -193,12 +193,12 @@ export default function LeaderboardPage() {
                         </span>
                         <span className="text-2xl leading-none select-none">{r.avatar}</span>
                         <span className="flex-1 min-w-0 truncate text-sm font-semibold" style={{ color: "var(--text)" }}>
-                          {r.name}{r.isMe && <span style={{ color: "var(--accent-bright)" }}> (ты)</span>}
+                          {r.name}{r.isMe && <span style={{ color: "var(--accent)" }}> (ты)</span>}
                         </span>
                         {r.sub && (
                           <span className="text-xs hidden sm:block" style={{ color: "var(--text3)" }}>{r.sub}</span>
                         )}
-                        <span className="text-sm font-black tabular-nums w-16 text-right" style={{ color: "var(--yellow)" }}>
+                        <span className="text-sm font-black tabular-nums w-16 text-right" style={{ color: "var(--accent)" }}>
                           {r.score}
                         </span>
                       </div>

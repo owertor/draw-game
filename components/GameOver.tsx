@@ -111,8 +111,8 @@ function PhaseCard({
     <div
       className="rounded-2xl p-4"
       style={success ? {
-        background: "rgba(34,197,94,0.08)",
-        border: "1px solid rgba(34,197,94,0.28)",
+        background: "rgba(63,125,78,0.08)",
+        border: "1px solid rgba(63,125,78,0.28)",
       } : {
         background: "var(--item-bg)",
         border: "1px solid var(--border)",
