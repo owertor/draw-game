@@ -39,54 +39,47 @@ export default function AchievementsPage() {
           </p>
         </header>
 
-        {/* Progress bar */}
-        <div className="glass p-4 flex items-center gap-4">
-          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: "var(--input-bg)" }}>
+        {/* Progress — slim line, no box */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--item-bg)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${pct}%`, background: "var(--accent)" }}
             />
           </div>
-          <span className="text-sm font-black tabular-nums" style={{ color: "var(--accent-bright)" }}>
+          <span className="text-sm font-bold tabular-nums shrink-0" style={{ color: "var(--text3)" }}>
             {pct}%
           </span>
         </div>
 
-        {/* Badge grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {/* Badges — borderless wall, locked dimmed */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-9">
           {ACHIEVEMENTS.map((a) => {
             const done = earned.has(a.id);
             return (
               <div
                 key={a.id}
-                className="rounded-2xl p-4 flex flex-col items-center text-center gap-2 transition-all"
-                style={{
-                  background: done ? "var(--achievement-done-bg)" : "var(--item-bg)",
-                  border: done ? "1px solid var(--achievement-done-border)" : "1px solid var(--border)",
-                  opacity: done || loading ? 1 : 0.45,
-                }}
+                className="flex flex-col items-center text-center gap-2"
+                style={{ opacity: done || loading ? 1 : 0.4 }}
               >
                 <span
-                  className="text-4xl select-none leading-none"
+                  className="text-5xl select-none leading-none"
                   style={{ filter: done ? "none" : "grayscale(1)" }}
                 >
                   {a.emoji}
                 </span>
-                <p className="text-sm font-bold leading-tight" style={{ color: "var(--text)" }}>
+                <p className="text-sm font-bold leading-tight mt-1" style={{ color: "var(--text)" }}>
                   {a.title}
                 </p>
-                <p className="text-xs leading-snug" style={{ color: "var(--text2)" }}>
+                <p className="text-xs leading-snug max-w-[14rem]" style={{ color: "var(--text2)" }}>
                   {a.description}
                 </p>
-                {done ? (
-                  <span className="text-xs font-bold mt-auto" style={{ color: "var(--accent-bright)" }}>
-                    ✓ Открыто
-                  </span>
-                ) : (
-                  <span className="text-xs font-semibold mt-auto" style={{ color: "var(--text3)" }}>
-                    🔒 Закрыто
-                  </span>
-                )}
+                <span
+                  className="text-[11px] font-semibold uppercase tracking-wider mt-0.5"
+                  style={{ color: done ? "var(--accent)" : "var(--text3)" }}
+                >
+                  {done ? "Открыто" : "Закрыто"}
+                </span>
               </div>
             );
           })}
