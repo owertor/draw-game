@@ -93,31 +93,33 @@ export default function LeaderboardPage() {
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="max-w-2xl mx-auto px-5 sm:px-8 py-10 sm:py-14 flex flex-col gap-10">
 
-        <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "var(--text)" }}>Лидерборд</h1>
+        <h1 className="font-extrabold tracking-tight" style={{ color: "var(--text)", fontSize: "clamp(1.9rem, 4vw, 2.6rem)", lineHeight: 1.05 }}>
+          Лидерборд
+        </h1>
 
-        {/* Tabs */}
-        <div className="flex rounded-xl p-1 gap-1" style={{ background: "var(--item-bg)" }}>
+        {/* Tabs — underline style */}
+        <div className="flex gap-6" style={{ borderBottom: "1px solid var(--border)" }}>
           {(["alltime", "daily"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              className="pb-3 -mb-px text-sm font-semibold transition-colors"
               style={{
-                background: tab === t ? "var(--accent)" : "transparent",
-                color:      tab === t ? "#fff" : "var(--text2)",
+                color: tab === t ? "var(--text)" : "var(--text3)",
+                borderBottom: tab === t ? "2px solid var(--accent)" : "2px solid transparent",
               }}
             >
-              {t === "alltime" ? "🏆 Все времена" : "📅 Сегодня"}
+              {t === "alltime" ? "Все времена" : "Сегодня"}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div className="glass p-12 text-center" style={{ color: "var(--text2)" }}>Загрузка…</div>
+          <p className="py-12 text-center" style={{ color: "var(--text2)" }}>Загрузка…</p>
         ) : rows.length === 0 ? (
-          <div className="glass p-12 text-center text-sm" style={{ color: "var(--text2)" }}>
+          <p className="py-12 text-center text-sm" style={{ color: "var(--text2)" }}>
             {tab === "daily" ? "Никто ещё не играл сегодня — стань первым" : "Пока нет результатов"}
-          </div>
+          </p>
         ) : (
           <div className="flex flex-col gap-6">
 
@@ -178,14 +180,14 @@ export default function LeaderboardPage() {
               const startRank = rows.length >= 3 ? 4 : 2;
               if (rest.length === 0) return null;
               return (
-                <div className="glass p-3 flex flex-col gap-1.5">
+                <div className="flex flex-col">
                   {rest.map((r, i) => {
                     const rank = startRank + i;
                     return (
-                      <div key={r.key} className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all"
+                      <div key={r.key} className="flex items-center gap-3.5 px-3 py-3.5 -mx-3 rounded-xl transition-colors"
                         style={{
-                          background: r.isMe ? "var(--accent-dim)" : i % 2 === 0 ? "var(--subtle-bg)" : "transparent",
-                          border:     r.isMe ? "1px solid var(--border-accent)" : "1px solid transparent",
+                          borderTop: i === 0 ? "none" : "1px solid var(--border)",
+                          background: r.isMe ? "var(--accent-dim)" : "transparent",
                         }}
                       >
                         <span className="w-7 text-center text-sm font-bold tabular-nums" style={{ color: "var(--text3)" }}>

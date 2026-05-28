@@ -7,42 +7,10 @@ import { getDailyWord, getTodayDate } from "@/lib/daily";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
-const MODES = [
-  {
-    id: "classic",
-    icon: "🎨",
-    title: "Классика",
-    desc: "Рисуй слово — бот угадывает. Бот рисует — угадываешь ты.",
-    href: "/game",
-    available: true,
-  },
-  {
-    id: "speed",
-    icon: "⚡",
-    title: "Быстрый раунд",
-    desc: "10 секунд на рисунок — молниеносный темп.",
-    href: "#",
-    available: false,
-    badge: "Скоро",
-  },
-  {
-    id: "vs",
-    icon: "👥",
-    title: "Мультиплеер",
-    desc: "Играй против живых игроков в реальном времени.",
-    href: "#",
-    available: false,
-    badge: "Фаза 3",
-  },
-  {
-    id: "endless",
-    icon: "♾️",
-    title: "Бесконечный",
-    desc: "Без лимита раундов — играй, пока хватает сил.",
-    href: "#",
-    available: false,
-    badge: "Скоро",
-  },
+const COMING = [
+  { id: "speed",   icon: "⚡",  title: "Быстрый раунд", desc: "10 секунд на рисунок", badge: "Скоро"   },
+  { id: "vs",      icon: "👥",  title: "Мультиплеер",   desc: "Против живых игроков", badge: "Фаза 3"  },
+  { id: "endless", icon: "♾️", title: "Бесконечный",   desc: "Без лимита раундов",   badge: "Скоро"   },
 ] as const;
 
 export default function DashboardPage() {
@@ -72,84 +40,69 @@ export default function DashboardPage() {
       });
   }, [user]);
 
+  const stats = profile && [
+    { label: "Лучший счёт", value: profile.best_score,             accent: true  },
+    { label: "Всего очков", value: profile.total_score,            accent: false },
+    { label: "Игр сыграно", value: profile.games_played,           accent: false },
+    { label: "Стрик",       value: `${profile.current_streak} дн.`, accent: true  },
+  ];
+
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-10">
+      <div className="max-w-4xl mx-auto px-5 sm:px-8 py-10 sm:py-14 flex flex-col gap-14">
 
         {/* ── Welcome ── */}
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: "var(--text)" }}>
-            Привет, {profile?.nickname ?? "Игрок"}! {profile?.avatar}
+        <header>
+          <h1 className="font-extrabold tracking-tight" style={{ color: "var(--text)", fontSize: "clamp(1.9rem, 4vw, 2.6rem)", lineHeight: 1.05 }}>
+            Привет, {profile?.nickname ?? "Игрок"} {profile?.avatar}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+          <p className="mt-2 text-base" style={{ color: "var(--text2)" }}>
             Выбери режим и начинай играть
           </p>
-        </div>
+        </header>
 
-        {/* ── Game modes ── */}
-        <section className="flex flex-col gap-4">
-          <p
-            className="text-xs uppercase tracking-widest font-semibold"
-            style={{ color: "var(--text3)" }}
+        {/* ── Primary mode: Классика (editorial hero) ── */}
+        <section className="flex flex-col gap-5">
+          <Link
+            href="/game"
+            className="group rounded-2xl p-7 sm:p-9 flex flex-col sm:flex-row sm:items-center gap-6 transition-transform hover:-translate-y-0.5"
+            style={{ background: "var(--surface)", border: "1px solid var(--border-accent)", boxShadow: "0 1px 2px rgba(31,28,22,0.04)" }}
           >
-            Режимы игры
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {MODES.map((m) => (
+            <span className="text-5xl sm:text-6xl select-none leading-none shrink-0">🎨</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs uppercase tracking-widest font-semibold mb-1.5" style={{ color: "var(--accent)" }}>
+                Доступно сейчас
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: "var(--text)" }}>
+                Классика
+              </h2>
+              <p className="text-sm sm:text-base mt-2 max-w-md leading-relaxed" style={{ color: "var(--text2)" }}>
+                Рисуй слово — бот угадывает. Бот рисует — угадываешь ты.
+              </p>
+            </div>
+            <span className="btn-primary px-8 py-3.5 rounded-xl text-base font-bold text-white text-center shrink-0">
+              Играть →
+            </span>
+          </Link>
+
+          {/* Coming-soon modes — quiet, secondary weight */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {COMING.map((m) => (
               <div
                 key={m.id}
-                className={`relative rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200 ${
-                  m.available ? "hover:-translate-y-0.5 cursor-pointer" : "opacity-60"
-                }`}
-                style={{
-                  background: m.available ? "var(--surface)" : "var(--item-bg)",
-                  border: m.available
-                    ? "1px solid var(--border-accent)"
-                    : "1px solid var(--border)",
-                  boxShadow: m.available ? "0 1px 2px rgba(31,28,22,0.04)" : "none",
-                }}
+                className="rounded-xl px-4 py-3.5 flex items-center gap-3"
+                style={{ background: "var(--subtle-bg)", border: "1px solid var(--border)" }}
               >
-                {/* Coming-soon badge */}
-                {"badge" in m && (
-                  <span
-                    className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{
-                      background: "var(--subtle-bg)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text3)",
-                    }}
-                  >
-                    {m.badge}
-                  </span>
-                )}
-
-                <span className="text-3xl select-none leading-none">{m.icon}</span>
-
-                <div>
-                  <p className="font-black text-base" style={{ color: "var(--text)" }}>{m.title}</p>
-                  <p
-                    className="text-sm mt-1 leading-snug"
-                    style={{ color: "var(--text2)" }}
-                  >
-                    {m.desc}
-                  </p>
+                <span className="text-xl select-none shrink-0" style={{ filter: "grayscale(0.5)", opacity: 0.7 }}>
+                  {m.icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold leading-tight truncate" style={{ color: "var(--text2)" }}>{m.title}</p>
+                  <p className="text-xs leading-tight mt-0.5 truncate" style={{ color: "var(--text3)" }}>{m.desc}</p>
                 </div>
-
-                {m.available ? (
-                  <Link
-                    href={m.href}
-                    className="mt-auto btn-primary w-full py-2.5 rounded-xl text-sm font-bold text-white text-center"
-                  >
-                    Играть →
-                  </Link>
-                ) : (
-                  <div
-                    className="mt-auto py-2.5 rounded-xl text-sm font-semibold text-center"
-                    style={{ background: "var(--subtle-bg)", color: "var(--text3)" }}
-                  >
-                    Недоступно
-                  </div>
-                )}
+                <span className="text-[10px] font-semibold uppercase tracking-wider shrink-0" style={{ color: "var(--text3)" }}>
+                  {m.badge}
+                </span>
               </div>
             ))}
           </div>
@@ -157,22 +110,16 @@ export default function DashboardPage() {
 
         {/* ── Daily challenge ── */}
         <section className="flex flex-col gap-4">
-          <p
-            className="text-xs uppercase tracking-widest font-semibold"
-            style={{ color: "var(--text3)" }}
-          >
+          <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--text3)" }}>
             Челлендж дня
           </p>
           <div
-            className="rounded-2xl p-5 flex items-center gap-4"
-            style={{
-              background: "var(--accent-dim)",
-              border: "1px solid var(--border-accent)",
-            }}
+            className="rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4"
+            style={{ background: "var(--accent-dim)", border: "1px solid var(--border-accent)" }}
           >
             <span className="text-4xl select-none shrink-0">📅</span>
             <div className="flex-1 min-w-0">
-              <p className="font-black text-base" style={{ color: "var(--text)" }}>
+              <p className="font-bold text-base sm:text-lg" style={{ color: "var(--text)" }}>
                 {dailyDone
                   ? `Сыграно · ${dailyScore} очков`
                   : `Слово дня: «${dailyWord.ru}»`}
@@ -191,7 +138,7 @@ export default function DashboardPage() {
             {!dailyDone && (
               <Link
                 href="/game?daily=true"
-                className="btn-primary px-5 py-2.5 rounded-xl font-bold text-white text-sm shrink-0"
+                className="btn-primary px-6 py-3 rounded-xl font-bold text-white text-sm shrink-0 text-center"
               >
                 Играть
               </Link>
@@ -199,30 +146,26 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* ── Quick stats ── */}
-        {profile && (
-          <section className="flex flex-col gap-4">
-            <p
-              className="text-xs uppercase tracking-widest font-semibold"
-              style={{ color: "var(--text3)" }}
-            >
+        {/* ── Stats (editorial figure row, no boxes) ── */}
+        {stats && (
+          <section className="flex flex-col gap-5">
+            <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--text3)" }}>
               Твоя статистика
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "Лучший счёт",  value: profile.best_score,              color: "var(--accent)" },
-                { label: "Всего очков",  value: profile.total_score,             color: "var(--text)"   },
-                { label: "Игр сыграно", value: profile.games_played,            color: "var(--text)"   },
-                { label: "Стрик",        value: `${profile.current_streak} дн.`, color: "var(--accent)" },
-              ].map(({ label, value, color }) => (
-                <div
-                  key={label}
-                  className="rounded-xl p-4 text-center"
-                  style={{ background: "var(--item-bg)", border: "1px solid var(--border)" }}
-                >
-                  <p className="text-xl font-black" style={{ color }}>{value}</p>
-                  <p className="text-xs mt-1 font-semibold" style={{ color: "var(--text3)" }}>
-                    {label}
+            <div
+              className="flex flex-wrap gap-y-8"
+              style={{ borderTop: "1px solid var(--border)", paddingTop: "1.75rem" }}
+            >
+              {stats.map((s) => (
+                <div key={s.label} className="flex-1 min-w-[7rem]">
+                  <p
+                    className="font-extrabold tabular-nums leading-none"
+                    style={{ color: s.accent ? "var(--accent)" : "var(--text)", fontSize: "clamp(1.8rem, 4vw, 2.5rem)" }}
+                  >
+                    {s.value}
+                  </p>
+                  <p className="text-sm font-medium mt-2" style={{ color: "var(--text3)" }}>
+                    {s.label}
                   </p>
                 </div>
               ))}

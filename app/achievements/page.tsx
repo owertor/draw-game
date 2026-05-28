@@ -28,14 +28,16 @@ export default function AchievementsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="max-w-4xl mx-auto px-5 sm:px-8 py-10 sm:py-14 flex flex-col gap-8">
 
-        <div>
-          <h1 className="text-2xl font-black" style={{ color: "var(--text)" }}>Достижения</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text2)" }}>
+        <header>
+          <h1 className="font-extrabold tracking-tight" style={{ color: "var(--text)", fontSize: "clamp(1.9rem, 4vw, 2.6rem)", lineHeight: 1.05 }}>
+            Достижения
+          </h1>
+          <p className="text-base mt-2" style={{ color: "var(--text2)" }}>
             Открыто {earnedCount} из {ACHIEVEMENTS.length}
           </p>
-        </div>
+        </header>
 
         {/* Progress bar */}
         <div className="glass p-4 flex items-center gap-4">

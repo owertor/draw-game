@@ -48,52 +48,60 @@ export default function DailyPage() {
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="max-w-2xl mx-auto px-5 sm:px-8 py-10 sm:py-14 flex flex-col gap-14">
 
-        <div>
-          <h1 className="text-3xl font-black" style={{ color: "var(--text)" }}>Челлендж дня</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text2)" }}>
-            Одна попытка в день — для всех игроков одно слово
+        {/* ── Header ── */}
+        <header>
+          <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: "var(--accent)" }}>
+            Челлендж дня
           </p>
-        </div>
+          <h1 className="font-extrabold tracking-tight" style={{ color: "var(--text)", fontSize: "clamp(1.9rem, 4vw, 2.6rem)", lineHeight: 1.05 }}>
+            Одно слово для всех
+          </h1>
+          <p className="mt-2 text-base max-w-md" style={{ color: "var(--text2)" }}>
+            Одна попытка в день. Завтра — новое слово и новая попытка.
+          </p>
+        </header>
 
-        <div className="grid lg:grid-cols-2 gap-6 items-start">
-
-        {/* Main card */}
-        <div
-          className="rounded-2xl p-8 flex flex-col items-center gap-4 text-center"
-          style={{ background: "var(--accent-dim)", border: "1px solid var(--border-accent)" }}
-        >
-          <span className="text-5xl select-none">📅</span>
-
+        {/* ── Today ── */}
+        <section>
           {loading ? (
             <p style={{ color: "var(--text2)" }}>Загрузка…</p>
           ) : played ? (
-            <>
-              <p className="font-black text-lg" style={{ color: "var(--text)" }}>
-                Сыграно сегодня ✓
+            <div className="flex flex-col gap-7">
+              <p className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text3)" }}>
+                Сыграно сегодня
               </p>
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-3xl font-black" style={{ color: "var(--accent)" }}>{score}</p>
-                  <p className="text-xs font-semibold" style={{ color: "var(--text3)" }}>очков</p>
+              <div className="flex flex-wrap gap-y-8" style={{ borderTop: "1px solid var(--border)", paddingTop: "1.75rem" }}>
+                <div className="flex-1 min-w-[8rem]">
+                  <p className="font-extrabold tabular-nums leading-none" style={{ color: "var(--accent)", fontSize: "clamp(2.4rem, 6vw, 3.5rem)" }}>
+                    {score}
+                  </p>
+                  <p className="text-sm font-medium mt-2" style={{ color: "var(--text3)" }}>очков</p>
                 </div>
                 {rank && (
-                  <div>
-                    <p className="text-3xl font-black" style={{ color: "var(--accent-bright)" }}>#{rank}</p>
-                    <p className="text-xs font-semibold" style={{ color: "var(--text3)" }}>из {players}</p>
+                  <div className="flex-1 min-w-[8rem]">
+                    <p className="font-extrabold tabular-nums leading-none" style={{ color: "var(--text)", fontSize: "clamp(2.4rem, 6vw, 3.5rem)" }}>
+                      #{rank}
+                    </p>
+                    <p className="text-sm font-medium mt-2" style={{ color: "var(--text3)" }}>из {players}</p>
                   </div>
                 )}
               </div>
               <p className="text-sm" style={{ color: "var(--text2)" }}>
                 Возвращайся завтра за новым словом
               </p>
-            </>
+            </div>
           ) : (
-            <>
-              <p className="font-black text-lg" style={{ color: "var(--text)" }}>
-                Слово дня: «{word.ru}»
-              </p>
+            <div className="flex flex-col gap-6">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text3)" }}>
+                  Слово дня
+                </p>
+                <p className="font-extrabold tracking-tight" style={{ color: "var(--text)", fontSize: "clamp(2.6rem, 8vw, 4.5rem)", lineHeight: 1 }}>
+                  «{word.ru}»
+                </p>
+              </div>
               {players > 0 && (
                 <p className="text-sm" style={{ color: "var(--text3)" }}>
                   {players} игроков уже сыграли сегодня
@@ -101,40 +109,43 @@ export default function DailyPage() {
               )}
               <Link
                 href="/game?daily=true"
-                className="btn-primary px-8 py-3 rounded-xl font-bold text-white"
+                className="btn-primary self-start px-8 py-3.5 rounded-xl text-base font-bold text-white"
               >
                 Играть →
               </Link>
-            </>
+            </div>
           )}
-        </div>
+        </section>
 
-        {/* History */}
-        <div className="glass p-5 flex flex-col gap-2">
+        {/* ── History ── */}
+        <section className="flex flex-col gap-5">
           <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--text3)" }}>
             История
           </p>
           {history.length === 0 ? (
-            <p className="text-sm py-4 text-center" style={{ color: "var(--text2)" }}>
+            <p className="text-sm" style={{ color: "var(--text2)" }}>
               {loading ? "Загрузка…" : "Сыграй челлендж — здесь появится история"}
             </p>
           ) : (
-            history.map((h) => (
-              <div key={h.date} className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-                style={{ background: "var(--subtle-bg)" }}
-              >
-                <span className="text-sm font-semibold" style={{ color: "var(--text2)" }}>
-                  {new Date(h.date + "T00:00:00Z").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
-                </span>
-                <span className="text-sm font-black tabular-nums" style={{ color: "var(--accent)" }}>
-                  {h.score}
-                </span>
-              </div>
-            ))
+            <div className="flex flex-col">
+              {history.map((h, i) => (
+                <div
+                  key={h.date}
+                  className="flex items-center justify-between py-3.5"
+                  style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
+                >
+                  <span className="text-sm font-medium" style={{ color: "var(--text2)" }}>
+                    {new Date(h.date + "T00:00:00Z").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
+                  </span>
+                  <span className="text-base font-extrabold tabular-nums" style={{ color: "var(--accent)" }}>
+                    {h.score}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
-        </div>
+        </section>
 
-        </div>
       </div>
     </AppShell>
   );
